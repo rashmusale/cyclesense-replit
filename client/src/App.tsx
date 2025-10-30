@@ -1,0 +1,35 @@
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import Dashboard from "@/pages/Dashboard";
+import ConfigureTeams from "@/pages/ConfigureTeams";
+import StartRound from "@/pages/StartRound";
+import RoundSummary from "@/pages/RoundSummary";
+import NotFound from "@/pages/not-found";
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={Dashboard} />
+      <Route path="/configure-teams" component={ConfigureTeams} />
+      <Route path="/start-round" component={StartRound} />
+      <Route path="/round-summary" component={RoundSummary} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Router />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
