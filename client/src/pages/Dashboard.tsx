@@ -100,46 +100,53 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card>
+            <Card className="border-l-4 border-l-[#2563EB] bg-gradient-to-br from-[#2563EB]/5 to-transparent">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Users className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-lg bg-[#2563EB]/10 flex items-center justify-center">
+                    <Users className="w-4 h-4 text-[#2563EB]" />
+                  </div>
                   Teams Playing
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold font-mono" data-testid="text-teams-count">
+                <p className="text-3xl font-bold font-mono text-[#2563EB]" data-testid="text-teams-count">
                   {mockTeams.length}
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-l-4 border-l-[#16A34A] bg-gradient-to-br from-[#16A34A]/5 to-transparent">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-lg bg-[#16A34A]/10 flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-[#16A34A]" />
+                  </div>
                   Average Return
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold font-mono" data-testid="text-avg-return">
+                <p className="text-3xl font-bold font-mono text-[#16A34A]" data-testid="text-avg-return">
                   {avgReturn.toFixed(2)}%
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-l-4 border-l-[#F97316] bg-gradient-to-br from-[#F97316]/5 to-transparent">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#F97316]/10 flex items-center justify-center">
+                    <span className="text-lg">🏆</span>
+                  </div>
                   Top Performer
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-xl font-bold" data-testid="text-top-team">
+                <p className="text-xl font-bold text-[#F97316]" data-testid="text-top-team">
                   {topTeam.name}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  NAV: <span className="font-mono font-bold">{topTeam.navCurrent.toFixed(2)}</span>
+                  NAV: <span className="font-mono font-bold text-foreground">{topTeam.navCurrent.toFixed(2)}</span>
                 </p>
               </CardContent>
             </Card>
@@ -166,23 +173,31 @@ export default function Dashboard() {
               <div className="rounded-md border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-muted/50">
+                    <thead className="bg-gradient-to-r from-[#2563EB]/10 via-[#16A34A]/10 to-[#F97316]/10">
                       <tr>
                         <th className="text-left p-4 text-sm font-semibold uppercase tracking-wide">Team</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Equity</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Debt</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Gold</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Cash</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#2563EB]">Equity</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#DC2626]">Debt</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Gold</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#16A34A]">Cash</th>
                       </tr>
                     </thead>
                     <tbody>
                       {mockTeams.map((team) => (
                         <tr key={team.id} className="border-t hover-elevate" data-testid={`row-allocation-${team.id}`}>
                           <td className="p-4 font-semibold">{team.name}</td>
-                          <td className="p-4 text-right font-mono">{team.latestAllocation.equity}%</td>
-                          <td className="p-4 text-right font-mono">{team.latestAllocation.debt}%</td>
-                          <td className="p-4 text-right font-mono">{team.latestAllocation.gold}%</td>
-                          <td className="p-4 text-right font-mono">{team.latestAllocation.cash}%</td>
+                          <td className="p-4 text-right">
+                            <span className="font-mono font-semibold text-[#2563EB]">{team.latestAllocation.equity}%</span>
+                          </td>
+                          <td className="p-4 text-right">
+                            <span className="font-mono font-semibold text-[#DC2626]">{team.latestAllocation.debt}%</span>
+                          </td>
+                          <td className="p-4 text-right">
+                            <span className="font-mono font-semibold text-[#F97316]">{team.latestAllocation.gold}%</span>
+                          </td>
+                          <td className="p-4 text-right">
+                            <span className="font-mono font-semibold text-[#16A34A]">{team.latestAllocation.cash}%</span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
