@@ -1,0 +1,75 @@
+Build a full-stack “CycleSense Leaderboard” web app for an offline, facilitator-led simulation. 
+Use a simple, self-contained stack (choose ONE: Node.js + Express + SQLite + EJS OR Python Flask + SQLite + Jinja). 
+Style with TailwindCSS. No login required. Persist data in SQLite.
+
+ENTITIES
+- Team { id, name, tokens_start=20, nav_start=10, nav_current, pitch_total=0, emotion_total=0, created_at }
+- Round { id, number, color_phase ENUM('GREEN','BLUE','ORANGE','RED'), scenario_code STRING (e.g., G1/B4/…/R6), 
+         portfolio_return_decimal, pitch_points_max5, emotion_points_max5, black_card_code STRING NULLABLE, 
+         team_results JSON, created_at }
+- TeamResult (stored inside Round.team_results as JSON per team): 
+  { team_id, allocation_equity_pct, allocation_debt_pct, allocation_gold_pct, allocation_cash_pct, 
+    rebalance_pct_used (0–20), emotion_token ENUM('Confidence','Discipline','Patience','Conviction','Adaptability'),
+    pitch_points (0–5), emotion_points (0–5), portfolio_return_decimal, nav_before, nav_after }
+
+SCORING LOGIC (must be centralized in a single function):
+- NAV formula per team each round:
+  new_nav = (old_nav * (1 + portfolio_return_decimal)) + pitch_points + emotion_points
+- Pitch and Emotion are 0–5 each and add as rupee-like points to NAV (treat as +1 per point).
+- Rebalance cap: UI should not allow rebalance > 20% in a round.
+
+ROUTE / SCREEN REQUIREMENTS
+1) Home / Dashboard
+   - Big “Current Leaderboard” table: Team, NAV (descending), Pitch Total, Emotion Total.
+   - Buttons: “Start New Game”, “Configure Teams”, “Start Next Round”.
+2) Configure Teams
+   - Add/Edit/Delete teams; set/rename; reset NAV to 10 if needed.
+3) Start Next Round (Facilitator Console)
+   - Step 1: Pick or randomize Phase Color (Green/Blue/Orange/Red) and Scenario Code (e.g., G1..G6, B1..B8, O1..O10, R1..R6).
+   - Step 2: (Optional) Pick/Open Black Card from a dropdown (W1..W10) to record it (no hidden logic needed).
+   - Step 3: Enter per-team inputs via a single page form with a section for EACH team:
+       • % allocation Equity/Debt/Gold/Cash (must sum to 100) 
+       • % Rebalance used (0–20) 
+       • Emotion Token (dropdown: Confidence, Discipline, Patience, Conviction, Adaptability)
+       • Pitch Points (0–5)
+       • Emotion Points (0–5)
+       • Portfolio Return (%) for that team THIS ROUND (facilitator types a decimal %, e.g., 2.5 or -1.0)
+         NOTE: we are NOT auto-calculating returns from cards; facilitator inputs the round return result shown to players.
+   - Step 4: On save, compute nav_before and nav_after for each team using the formula. Persist Round + TeamResults. 
+   - Redirect to Round Summary.
+4) Round Summary
+   - Show color, scenario code, optional black card, and a table of per-team results (old NAV → return% → +pitch → +emotion → new NAV).
+   - Button: “Show Leaderboard”.
+5) Leaderboard (can be same Dashboard)
+   - Live standings with sparkline (optional) or list of NAV by round (per team).
+   - Button: “Export Game Data (CSV)” → dump Teams and all Rounds with TeamResults.
+6) Admin
+   - “Reset Game” (with confirm modal): clears rounds; optionally keep teams or clear teams too.
+
+DATA VALIDATION
+- Allocations must sum to 100.
+- Rebalance <= 20.
+- Pitch/Emotion integers 0–5.
+- Returns entered as % but stored as decimal (e.g., 2.5% → 0.025).
+
+UX DETAILS
+- Facilitator-first: big buttons, keyboard-friendly forms, sticky header Save.
+- Phase color badges (Green/Blue/Orange/Red) and Black card chips.
+- Toasts for saved rounds, errors, and reset confirmations.
+
+TECH NOTES
+- Implement a tiny DAL for SQLite with schema migration on first run.
+- Put scoring function in /lib/scoring.(js|py) and reuse everywhere.
+- Use server-side rendering (EJS/Jinja). Keep JS light.
+- Provide seed script to add sample teams (Team Alpha, Team Beta).
+- Provide CSV export route.
+
+NICE-TO-HAVE (if time):
+- “Round History” page with pagination and per-team NAV trajectory.
+- Per-team detail page with NAV per round.
+
+ACCEPTANCE TEST
+- Add 2 teams, run 2 rounds with mixed returns and points, see NAV update per formula:
+  new_nav = (old_nav * (1 + r)) + pitch + emotion
+- Leaderboard sorts by highest NAV.
+- CSV exports open cleanly in Excel.
