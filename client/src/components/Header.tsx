@@ -1,5 +1,5 @@
-import { Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoUrl from "@assets/CycleSense LOGO_1761839230730.png";
 
 interface HeaderProps {
   currentRound?: number;
@@ -14,7 +14,7 @@ export default function Header({ currentRound, onNewRound, onConfigureTeams, onN
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           <div className="flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-primary" />
+            <img src={logoUrl} alt="CycleSense" className="h-10 w-10" />
             <h1 className="text-2xl font-bold">CycleSense Leaderboard</h1>
           </div>
           

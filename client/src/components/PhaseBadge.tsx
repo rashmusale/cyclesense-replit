@@ -8,10 +8,10 @@ interface PhaseBadgeProps {
 }
 
 const phaseStyles: Record<PhaseColor, string> = {
-  GREEN: 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30',
-  BLUE: 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30',
-  ORANGE: 'bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30',
-  RED: 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30',
+  GREEN: 'bg-[#16A34A]/20 text-[#16A34A] border-[#16A34A]/30',
+  BLUE: 'bg-[#2563EB]/20 text-[#2563EB] border-[#2563EB]/30',
+  ORANGE: 'bg-[#F97316]/20 text-[#F97316] border-[#F97316]/30',
+  RED: 'bg-[#DC2626]/20 text-[#DC2626] border-[#DC2626]/30',
 };
 
 export default function PhaseBadge({ phase, className }: PhaseBadgeProps) {
