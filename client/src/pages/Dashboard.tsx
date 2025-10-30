@@ -21,8 +21,7 @@ export default function Dashboard() {
       navCurrent: 15.75, 
       pitchTotal: 12, 
       emotionTotal: 8,
-      latestAllocation: { equity: 40, debt: 30, gold: 20, cash: 10 },
-      returnPct: 5.75
+      latestAllocation: { equity: 40, debt: 30, gold: 20, cash: 10 }
     },
     { 
       id: 2, 
@@ -30,8 +29,7 @@ export default function Dashboard() {
       navCurrent: 14.20, 
       pitchTotal: 10, 
       emotionTotal: 11,
-      latestAllocation: { equity: 50, debt: 25, gold: 15, cash: 10 },
-      returnPct: 4.20
+      latestAllocation: { equity: 50, debt: 25, gold: 15, cash: 10 }
     },
     { 
       id: 3, 
@@ -39,8 +37,7 @@ export default function Dashboard() {
       navCurrent: 13.45, 
       pitchTotal: 9, 
       emotionTotal: 9,
-      latestAllocation: { equity: 35, debt: 35, gold: 20, cash: 10 },
-      returnPct: 3.45
+      latestAllocation: { equity: 35, debt: 35, gold: 20, cash: 10 }
     },
     { 
       id: 4, 
@@ -48,14 +45,20 @@ export default function Dashboard() {
       navCurrent: 12.80, 
       pitchTotal: 11, 
       emotionTotal: 7,
-      latestAllocation: { equity: 30, debt: 40, gold: 20, cash: 10 },
-      returnPct: 2.80
+      latestAllocation: { equity: 30, debt: 40, gold: 20, cash: 10 }
     },
   ];
 
   const currentRound = 3;
-  const avgReturn = mockTeams.reduce((sum, team) => sum + team.returnPct, 0) / mockTeams.length;
-  const topTeam = [...mockTeams].sort((a, b) => b.navCurrent - a.navCurrent)[0];
+  
+  // Calculate return as (latest NAV / 10) - 1
+  const teamsWithReturns = mockTeams.map(team => ({
+    ...team,
+    returnPct: ((team.navCurrent / 10) - 1) * 100
+  }));
+  
+  const avgReturn = teamsWithReturns.reduce((sum, team) => sum + team.returnPct, 0) / teamsWithReturns.length;
+  const topTeam = [...teamsWithReturns].sort((a, b) => b.navCurrent - a.navCurrent)[0];
 
   const handleExport = () => {
     toast({
@@ -166,7 +169,7 @@ export default function Dashboard() {
             </TabsList>
 
             <TabsContent value="leaderboard">
-              <LeaderboardTable teams={mockTeams} />
+              <LeaderboardTable teams={teamsWithReturns} />
             </TabsContent>
 
             <TabsContent value="allocations">
@@ -183,7 +186,7 @@ export default function Dashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {mockTeams.map((team) => (
+                      {teamsWithReturns.map((team) => (
                         <tr key={team.id} className="border-t hover-elevate" data-testid={`row-allocation-${team.id}`}>
                           <td className="p-4 font-semibold">{team.name}</td>
                           <td className="p-4 text-right">
@@ -216,7 +219,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {mockTeams.map((team) => (
+                    {teamsWithReturns.map((team) => (
                       <div key={team.id} className="space-y-3">
                         <h4 className="font-semibold text-lg">{team.name}</h4>
                         <div className="rounded-md border border-border overflow-hidden">
