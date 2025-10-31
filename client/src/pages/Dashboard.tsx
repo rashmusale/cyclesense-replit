@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ResetGameModal from "@/components/ResetGameModal";
-import { Download, Users, TrendingUp, PieChart } from "lucide-react";
+import { Download, Users, PieChart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -57,8 +58,15 @@ export default function Dashboard() {
     returnPct: ((team.navCurrent / 10) - 1) * 100
   }));
   
-  const avgReturn = teamsWithReturns.reduce((sum, team) => sum + team.returnPct, 0) / teamsWithReturns.length;
   const topTeam = [...teamsWithReturns].sort((a, b) => b.navCurrent - a.navCurrent)[0];
+
+  // Mock NAV progression data for line chart
+  const navProgressionData = [
+    { round: 0, 'Team Alpha': 10, 'Team Beta': 10, 'Team Gamma': 10, 'Team Delta': 10 },
+    { round: 1, 'Team Alpha': 11.2, 'Team Beta': 10.8, 'Team Gamma': 10.5, 'Team Delta': 10.3 },
+    { round: 2, 'Team Alpha': 13.5, 'Team Beta': 12.1, 'Team Gamma': 11.8, 'Team Delta': 11.2 },
+    { round: 3, 'Team Alpha': 15.75, 'Team Beta': 14.20, 'Team Gamma': 13.45, 'Team Delta': 12.80 },
+  ];
 
   const handleExport = () => {
     toast({
@@ -102,7 +110,7 @@ export default function Dashboard() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
             <Card className="border-l-4 border-l-[#2563EB] bg-gradient-to-br from-[#2563EB]/5 to-transparent">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -119,23 +127,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-[#16A34A] bg-gradient-to-br from-[#16A34A]/5 to-transparent">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#16A34A]/10 flex items-center justify-center">
-                    <TrendingUp className="w-4 h-4 text-[#16A34A]" />
-                  </div>
-                  Average Return
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold font-mono text-[#16A34A]" data-testid="text-avg-return">
-                  {avgReturn.toFixed(2)}%
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-[#F97316] bg-gradient-to-br from-[#F97316]/5 to-transparent">
+            <Card className="lg:col-span-1 border-l-4 border-l-[#F97316] bg-gradient-to-br from-[#F97316]/5 to-transparent">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-[#F97316]/10 flex items-center justify-center">
@@ -154,6 +146,40 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="text-lg">NAV Progression</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={navProgressionData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="round" 
+                    label={{ value: 'Round', position: 'insideBottom', offset: -5 }}
+                    className="text-muted-foreground"
+                  />
+                  <YAxis 
+                    label={{ value: 'NAV', angle: -90, position: 'insideLeft' }}
+                    className="text-muted-foreground"
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px'
+                    }}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="Team Alpha" stroke="#F97316" strokeWidth={2} dot={{ fill: '#F97316', r: 4 }} />
+                  <Line type="monotone" dataKey="Team Beta" stroke="#2563EB" strokeWidth={2} dot={{ fill: '#2563EB', r: 4 }} />
+                  <Line type="monotone" dataKey="Team Gamma" stroke="#16A34A" strokeWidth={2} dot={{ fill: '#16A34A', r: 4 }} />
+                  <Line type="monotone" dataKey="Team Delta" stroke="#DC2626" strokeWidth={2} dot={{ fill: '#DC2626', r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
           <Tabs defaultValue="leaderboard" className="w-full">
             <TabsList className="mb-6">
