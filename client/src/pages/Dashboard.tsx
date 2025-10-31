@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ResetGameModal from "@/components/ResetGameModal";
-import { Download, Users, PieChart } from "lucide-react";
+import { Download, PieChart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -57,8 +57,6 @@ export default function Dashboard() {
     ...team,
     returnPct: ((team.navCurrent / 10) - 1) * 100
   }));
-  
-  const topTeam = [...teamsWithReturns].sort((a, b) => b.navCurrent - a.navCurrent)[0];
 
   // Mock NAV progression data for line chart
   const navProgressionData = [
@@ -108,43 +106,6 @@ export default function Dashboard() {
               <Download className="w-4 h-4 mr-2" />
               Export CSV
             </Button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-            <Card className="border-l-4 border-l-[#2563EB] bg-gradient-to-br from-[#2563EB]/5 to-transparent">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#2563EB]/10 flex items-center justify-center">
-                    <Users className="w-4 h-4 text-[#2563EB]" />
-                  </div>
-                  Teams Playing
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold font-mono text-[#2563EB]" data-testid="text-teams-count">
-                  {mockTeams.length}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="lg:col-span-1 border-l-4 border-l-[#F97316] bg-gradient-to-br from-[#F97316]/5 to-transparent">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#F97316]/10 flex items-center justify-center">
-                    <span className="text-lg">🏆</span>
-                  </div>
-                  Top Performer
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-xl font-bold text-[#F97316]" data-testid="text-top-team">
-                  {topTeam.name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  NAV: <span className="font-mono font-bold text-foreground">{topTeam.navCurrent.toFixed(2)}</span>
-                </p>
-              </CardContent>
-            </Card>
           </div>
 
           <Card className="mb-8">
