@@ -9,6 +9,7 @@ import ConfigureTeams from "@/pages/ConfigureTeams";
 import StartRound from "@/pages/StartRound";
 import TeamInput from "@/pages/TeamInput";
 import RoundSummary from "@/pages/RoundSummary";
+import ManageCards from "@/pages/ManageCards";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/start-round" component={StartRound} />
       <Route path="/team-input" component={TeamInput} />
       <Route path="/round-summary" component={RoundSummary} />
+      <Route path="/manage-cards" component={ManageCards} />
       <Route component={NotFound} />
     </Switch>
   );

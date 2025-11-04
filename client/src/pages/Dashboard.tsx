@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Trophy, TrendingUp, History } from "lucide-react";
+import { Download, Trophy, TrendingUp, History, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { Team, GameState, TeamAllocation, Round } from "@shared/schema";
@@ -163,6 +163,15 @@ export default function Dashboard() {
             >
               New Game
             </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setLocation('/manage-cards')} 
+              className="w-full"
+              data-testid="button-manage-cards-home"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Manage Cards
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -183,6 +192,14 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex gap-2 flex-wrap">
+              <Button 
+                variant="outline" 
+                onClick={() => setLocation('/manage-cards')}
+                data-testid="button-manage-cards"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Manage Cards
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={handleExport}

@@ -34,6 +34,8 @@ export interface IStorage {
   getColorCardsByPhase(phase: string): Promise<ColorCard[]>;
   getColorCard(id: string): Promise<ColorCard | undefined>;
   createColorCard(card: InsertColorCard): Promise<ColorCard>;
+  deleteAllColorCards(): Promise<void>;
+  bulkCreateColorCards(cards: InsertColorCard[]): Promise<ColorCard[]>;
   
   // Black Cards
   getAllBlackCards(): Promise<BlackCard[]>;
@@ -166,6 +168,19 @@ export class MemStorage implements IStorage {
     };
     this.colorCards.set(id, card);
     return card;
+  }
+
+  async deleteAllColorCards(): Promise<void> {
+    this.colorCards.clear();
+  }
+
+  async bulkCreateColorCards(cards: InsertColorCard[]): Promise<ColorCard[]> {
+    const created: ColorCard[] = [];
+    for (const insertCard of cards) {
+      const card = await this.createColorCard(insertCard);
+      created.push(card);
+    }
+    return created;
   }
 
   // Black Cards
