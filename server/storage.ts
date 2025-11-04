@@ -268,7 +268,16 @@ export class MemStorage implements IStorage {
     const allocationsToDelete = Array.from(this.teamAllocations.values())
       .filter(a => a.roundId === roundId);
     
+    // Rollback team NAV totals to pre-round state before deleting
     for (const alloc of allocationsToDelete) {
+      const team = this.teams.get(alloc.teamId);
+      if (team) {
+        // Restore team to the state before this round was calculated
+        team.currentNav = alloc.navBefore;
+        team.pitchTotal = team.pitchTotal - alloc.pitchScore;
+        team.emotionTotal = team.emotionTotal - alloc.emotionScore;
+        this.teams.set(team.id, team);
+      }
       this.teamAllocations.delete(alloc.id);
     }
   }
