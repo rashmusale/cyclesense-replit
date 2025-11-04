@@ -55,10 +55,11 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/allocations"] });
       toast({
         title: "Game Reset",
-        description: "All game data has been cleared",
+        description: "All game data has been cleared. Redirecting to home...",
       });
       setResetModalOpen(false);
       setEndGameModalOpen(false);
+      setLocation("/");
     },
   });
 
@@ -388,8 +389,8 @@ export default function Dashboard() {
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#DC2626]">Debt %</th>
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Gold %</th>
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#16A34A]">Cash %</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">NAV Before</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">NAV After</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Pitch Score</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Emotion Score</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -433,10 +434,10 @@ export default function Dashboard() {
                                 <span className="font-mono text-[#16A34A]">{alloc.cash}%</span>
                               </td>
                               <td className="p-4 text-right">
-                                <span className="font-mono">{alloc.navBefore}</span>
+                                <span className="font-mono">{alloc.pitchScore}</span>
                               </td>
                               <td className="p-4 text-right">
-                                <span className="font-mono font-semibold">{alloc.navAfter}</span>
+                                <span className="font-mono">{alloc.emotionScore}</span>
                               </td>
                             </tr>
                           );
