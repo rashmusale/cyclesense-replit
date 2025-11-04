@@ -273,6 +273,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============ TEAM ALLOCATION ROUTES ============
   
+  // Get all allocations
+  app.get("/api/allocations", async (req, res) => {
+    const allAllocations: any[] = [];
+    const rounds = await storage.getAllRounds();
+    for (const round of rounds) {
+      const roundAllocs = await storage.getAllocationsForRound(round.id);
+      allAllocations.push(...roundAllocs);
+    }
+    res.json(allAllocations);
+  });
+  
   // Delete allocations for a round
   app.delete("/api/allocations/round/:roundId", async (req, res) => {
     await storage.deleteAllocationsForRound(req.params.roundId);

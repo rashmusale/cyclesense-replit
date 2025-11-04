@@ -56,7 +56,7 @@ export default function RoundSummary() {
   const roundAllocations = allocations.filter(a => a.roundId === roundId);
 
   const applyBlackCardMutation = useMutation({
-    mutationFn: async (blackCardId: string) => {
+    mutationFn: async ({ blackCardId, savedAllocations }: { blackCardId: string; savedAllocations: TeamAllocation[] }) => {
       // Step 1: Update round with black card
       await apiRequest("PATCH", `/api/rounds/${roundId}`, {
         blackCardId,
@@ -66,7 +66,7 @@ export default function RoundSummary() {
       await apiRequest("DELETE", `/api/allocations/round/${roundId}`, {});
       
       // Step 3: Recreate allocations with same data (server will recalc NAV with black card)
-      const promises = roundAllocations.map(async (alloc) => {
+      const promises = savedAllocations.map(async (alloc) => {
         const res = await apiRequest("POST", "/api/allocations", {
           teamId: alloc.teamId,
           roundId,
@@ -96,7 +96,9 @@ export default function RoundSummary() {
 
   const handleBlackCardReveal = (card: BlackCard) => {
     setSelectedBlackCard(card);
-    applyBlackCardMutation.mutate(card.id);
+    // Save allocations NOW before mutation starts
+    const savedAllocations = allocations.filter(a => a.roundId === roundId);
+    applyBlackCardMutation.mutate({ blackCardId: card.id, savedAllocations });
   };
 
   if (!round || !colorCard) {
