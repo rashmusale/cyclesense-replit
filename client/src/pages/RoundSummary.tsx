@@ -224,8 +224,8 @@ export default function RoundSummary() {
           </Card>
         )}
 
-        {/* Black Card Prompt */}
-        {!round.blackCardId && (
+        {/* Black Card Prompt - DISABLED (buggy NAV calculation) */}
+        {false && !round.blackCardId && (
           <Card className="mb-6 border-orange-500">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -249,8 +249,8 @@ export default function RoundSummary() {
           </Card>
         )}
 
-        {/* Black Card Applied */}
-        {round.blackCardId && selectedBlackCard && (
+        {/* Black Card Applied - DISABLED (buggy NAV calculation) */}
+        {false && round.blackCardId && selectedBlackCard && (
           <Card className="mb-6 border-purple-500">
             <CardHeader>
               <CardTitle className="text-purple-600">Black Card Applied</CardTitle>
@@ -280,16 +280,14 @@ export default function RoundSummary() {
         )}
 
         {/* Actions */}
-        {(round.blackCardId || !blackCardDialogOpen) && (
-          <div className="flex justify-center gap-4">
-            <Button variant="outline" onClick={() => setLocation('/start-round')} data-testid="button-start-another-round">
-              Start Another Round
-            </Button>
-            <Button onClick={() => setLocation('/')} size="lg" data-testid="button-view-leaderboard">
-              View Leaderboard
-            </Button>
-          </div>
-        )}
+        <div className="flex justify-center gap-4">
+          <Button variant="outline" onClick={() => setLocation('/start-round')} data-testid="button-start-another-round">
+            Start Another Round
+          </Button>
+          <Button onClick={() => setLocation('/')} size="lg" data-testid="button-view-leaderboard">
+            View Leaderboard
+          </Button>
+        </div>
       </div>
 
       {/* Black Card Selection Dialog */}

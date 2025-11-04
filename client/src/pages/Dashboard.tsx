@@ -5,8 +5,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Trophy, TrendingUp } from "lucide-react";
+import { Download, Trophy, TrendingUp, Plus, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { Team, GameState, TeamAllocation, Round } from "@shared/schema";
@@ -25,6 +27,9 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [endGameModalOpen, setEndGameModalOpen] = useState(false);
+  const [showAddTeamForm, setShowAddTeamForm] = useState(false);
+  const [newTeamName, setNewTeamName] = useState("");
 
   const { data: gameState } = useQuery<GameState>({
     queryKey: ["/api/game-state"],
@@ -57,6 +62,23 @@ export default function Dashboard() {
         description: "All game data has been cleared",
       });
       setResetModalOpen(false);
+      setEndGameModalOpen(false);
+    },
+  });
+
+  const addTeamMutation = useMutation({
+    mutationFn: async (teamName: string) => {
+      const res = await apiRequest("POST", "/api/teams", { name: teamName });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      toast({
+        title: "Team Added",
+        description: `${newTeamName} has been added with NAV 10.00`,
+      });
+      setNewTeamName("");
+      setShowAddTeamForm(false);
     },
   });
 
@@ -122,7 +144,7 @@ export default function Dashboard() {
     });
   };
 
-  const getLatestAllocation = (teamId: number) => {
+  const getLatestAllocation = (teamId: string) => {
     // Create a map from roundId to roundNumber for sorting
     const roundIdToNumber = new Map<string, number>();
     rounds.forEach(round => {
@@ -137,6 +159,12 @@ export default function Dashboard() {
         return roundNumB - roundNumA; // Sort descending (latest first)
       });
     return teamAllocs[0] || null;
+  };
+
+  const handleAddTeam = () => {
+    if (newTeamName.trim()) {
+      addTeamMutation.mutate(newTeamName);
+    }
   };
 
   if (!hasStarted) {
@@ -193,6 +221,13 @@ export default function Dashboard() {
               >
                 Reset Game
               </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => setEndGameModalOpen(true)}
+                data-testid="button-end-game"
+              >
+                End Game
+              </Button>
               {currentRound > 0 && (
                 <Button 
                   onClick={() => setLocation('/start-round')}
@@ -209,13 +244,6 @@ export default function Dashboard() {
                   Start First Round
                 </Button>
               )}
-              <Button 
-                onClick={() => setLocation('/team-input')}
-                variant="default"
-                data-testid="button-enter-allocations"
-              >
-                Enter Allocations
-              </Button>
             </div>
           </div>
 
@@ -276,6 +304,10 @@ export default function Dashboard() {
               </TabsTrigger>
               <TabsTrigger value="allocations" data-testid="tab-allocations">
                 Current Allocations
+              </TabsTrigger>
+              <TabsTrigger value="history" data-testid="tab-history">
+                <History className="w-4 h-4 mr-2" />
+                Historical Allocations
               </TabsTrigger>
             </TabsList>
 
@@ -367,7 +399,141 @@ export default function Dashboard() {
                 </div>
               </div>
             </TabsContent>
+
+            <TabsContent value="history">
+              <div className="rounded-md border border-border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gradient-to-r from-[#2563EB]/10 via-[#16A34A]/10 to-[#F97316]/10">
+                      <tr>
+                        <th className="text-left p-4 text-sm font-semibold uppercase tracking-wide">Round</th>
+                        <th className="text-left p-4 text-sm font-semibold uppercase tracking-wide">Team</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#2563EB]">Equity %</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#DC2626]">Debt %</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Gold %</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#16A34A]">Cash %</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">NAV Before</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">NAV After</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        // Create a map from roundId to roundNumber
+                        const roundIdToNumber = new Map<string, number>();
+                        rounds.forEach(round => {
+                          roundIdToNumber.set(round.id, round.roundNumber);
+                        });
+
+                        // Sort allocations by round number then team name
+                        const sortedAllocations = [...allAllocations].sort((a, b) => {
+                          const roundNumA = roundIdToNumber.get(a.roundId) || 0;
+                          const roundNumB = roundIdToNumber.get(b.roundId) || 0;
+                          if (roundNumA !== roundNumB) {
+                            return roundNumA - roundNumB;
+                          }
+                          const teamA = teams.find(t => t.id === a.teamId);
+                          const teamB = teams.find(t => t.id === b.teamId);
+                          return (teamA?.name || '').localeCompare(teamB?.name || '');
+                        });
+
+                        return sortedAllocations.map((alloc) => {
+                          const team = teams.find(t => t.id === alloc.teamId);
+                          const roundNumber = roundIdToNumber.get(alloc.roundId);
+                          
+                          return (
+                            <tr key={alloc.id} className="border-t hover-elevate" data-testid={`row-history-${alloc.id}`}>
+                              <td className="p-4 font-semibold">{roundNumber}</td>
+                              <td className="p-4">{team?.name || 'Unknown'}</td>
+                              <td className="p-4 text-right">
+                                <span className="font-mono text-[#2563EB]">{alloc.equity}%</span>
+                              </td>
+                              <td className="p-4 text-right">
+                                <span className="font-mono text-[#DC2626]">{alloc.debt}%</span>
+                              </td>
+                              <td className="p-4 text-right">
+                                <span className="font-mono text-[#F97316]">{alloc.gold}%</span>
+                              </td>
+                              <td className="p-4 text-right">
+                                <span className="font-mono text-[#16A34A]">{alloc.cash}%</span>
+                              </td>
+                              <td className="p-4 text-right">
+                                <span className="font-mono">{alloc.navBefore}</span>
+                              </td>
+                              <td className="p-4 text-right">
+                                <span className="font-mono font-semibold">{alloc.navAfter}</span>
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
+        </div>
+
+        {/* Team Management Section */}
+        <div className="mt-12 border-t pt-8">
+          <h3 className="text-2xl font-bold mb-6">Team Management</h3>
+          
+          {showAddTeamForm ? (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Add New Team</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="team-name">Team Name</Label>
+                  <Input
+                    id="team-name"
+                    value={newTeamName}
+                    onChange={(e) => setNewTeamName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAddTeam();
+                      if (e.key === 'Escape') {
+                        setShowAddTeamForm(false);
+                        setNewTeamName('');
+                      }
+                    }}
+                    placeholder="Enter team name"
+                    autoFocus
+                    data-testid="input-new-team-name"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleAddTeam} 
+                    disabled={addTeamMutation.isPending}
+                    data-testid="button-save-team"
+                  >
+                    {addTeamMutation.isPending ? "Adding..." : "Add Team"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowAddTeamForm(false);
+                      setNewTeamName('');
+                    }}
+                    data-testid="button-cancel-add"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Button
+              onClick={() => setShowAddTeamForm(true)}
+              className="mb-6"
+              size="lg"
+              data-testid="button-add-team"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add New Team
+            </Button>
+          )}
         </div>
       </main>
 
@@ -386,6 +552,26 @@ export default function Dashboard() {
               data-testid="button-confirm-reset"
             >
               Reset Game
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={endGameModalOpen} onOpenChange={setEndGameModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End Game?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will end the current game and reset all data including rounds, allocations, and team scores. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-end-game">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => resetGameMutation.mutate()}
+              data-testid="button-confirm-end-game"
+            >
+              End Game
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
