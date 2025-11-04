@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import PhaseBadge from "@/components/PhaseBadge";
-import { Dices, Eye, EyeOff } from "lucide-react";
+import { Dices } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -214,32 +214,32 @@ export default function StartRound() {
                         <div className="text-sm text-muted-foreground mb-1">Market Event</div>
                         <div className="text-base" data-testid="text-card-text">{drawnCard.cardText}</div>
                       </div>
-                      
-                      {/* Returns Hidden */}
                       <div className="border-t pt-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="text-sm font-semibold">Asset Returns</div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <EyeOff className="w-4 h-4" />
-                            <span>Hidden until NAV calculated</span>
-                          </div>
-                        </div>
+                        <div className="text-sm font-semibold mb-3">Asset Returns</div>
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="flex justify-between items-center p-2 rounded bg-muted">
-                            <span className="text-sm font-medium">Equity</span>
-                            <span className="font-mono font-bold">???</span>
+                          <div className="flex justify-between items-center p-2 rounded bg-[#2563EB]/10">
+                            <span className="text-sm font-medium text-[#2563EB]">Equity</span>
+                            <span className="font-mono font-bold text-[#2563EB]" data-testid="text-equity-return">
+                              {parseFloat(drawnCard.equityReturn) > 0 ? "+" : ""}{drawnCard.equityReturn}%
+                            </span>
                           </div>
-                          <div className="flex justify-between items-center p-2 rounded bg-muted">
-                            <span className="text-sm font-medium">Debt</span>
-                            <span className="font-mono font-bold">???</span>
+                          <div className="flex justify-between items-center p-2 rounded bg-[#DC2626]/10">
+                            <span className="text-sm font-medium text-[#DC2626]">Debt</span>
+                            <span className="font-mono font-bold text-[#DC2626]" data-testid="text-debt-return">
+                              {parseFloat(drawnCard.debtReturn) > 0 ? "+" : ""}{drawnCard.debtReturn}%
+                            </span>
                           </div>
-                          <div className="flex justify-between items-center p-2 rounded bg-muted">
-                            <span className="text-sm font-medium">Gold</span>
-                            <span className="font-mono font-bold">???</span>
+                          <div className="flex justify-between items-center p-2 rounded bg-[#F97316]/10">
+                            <span className="text-sm font-medium text-[#F97316]">Gold</span>
+                            <span className="font-mono font-bold text-[#F97316]" data-testid="text-gold-return">
+                              {parseFloat(drawnCard.goldReturn) > 0 ? "+" : ""}{drawnCard.goldReturn}%
+                            </span>
                           </div>
-                          <div className="flex justify-between items-center p-2 rounded bg-muted">
-                            <span className="text-sm font-medium">Cash</span>
-                            <span className="font-mono font-bold">???</span>
+                          <div className="flex justify-between items-center p-2 rounded bg-[#16A34A]/10">
+                            <span className="text-sm font-medium text-[#16A34A]">Cash</span>
+                            <span className="font-mono font-bold text-[#16A34A]" data-testid="text-cash-return">
+                              {parseFloat(drawnCard.cashReturn) > 0 ? "+" : ""}{drawnCard.cashReturn}%
+                            </span>
                           </div>
                         </div>
                       </div>

@@ -144,114 +144,116 @@ export default function GameSetup() {
         </Card>
 
         <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Team Configuration</CardTitle>
-            <Button onClick={addTeam} variant="outline" size="sm" data-testid="button-add-team">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Team
-            </Button>
+            <p className="text-sm text-muted-foreground">Initial allocations must total 100%</p>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {teams.map((team, index) => {
-              const total = getAllocationTotal(team);
-              const isValid = total === 100;
-              
-              return (
-                <div key={index} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-lg">Team {index + 1}</h3>
-                    {teams.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeTeam(index)}
-                        data-testid={`button-remove-team-${index}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor={`team-name-${index}`}>Team Name</Label>
-                      <Input
-                        id={`team-name-${index}`}
-                        value={team.name}
-                        onChange={(e) => updateTeam(index, "name", e.target.value)}
-                        placeholder="Enter team name"
-                        data-testid={`input-team-name-${index}`}
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <Label>Initial Allocation (must total 100%)</Label>
-                        <span
-                          className={`text-sm font-mono font-semibold ${
-                            isValid ? "text-green-600" : "text-red-600"
-                          }`}
-                          data-testid={`text-allocation-total-${index}`}
-                        >
-                          Total: {total}%
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor={`equity-${index}`} className="text-[#2563EB]">Equity</Label>
+          <CardContent>
+            <div className="rounded-md border border-border overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-[#2563EB]/10 via-[#16A34A]/10 to-[#F97316]/10">
+                  <tr>
+                    <th className="text-left p-3 text-sm font-semibold uppercase tracking-wide">Team Name</th>
+                    <th className="text-right p-3 text-sm font-semibold uppercase tracking-wide text-[#2563EB]">Equity %</th>
+                    <th className="text-right p-3 text-sm font-semibold uppercase tracking-wide text-[#DC2626]">Debt %</th>
+                    <th className="text-right p-3 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Gold %</th>
+                    <th className="text-right p-3 text-sm font-semibold uppercase tracking-wide text-[#16A34A]">Cash %</th>
+                    <th className="text-right p-3 text-sm font-semibold uppercase tracking-wide">Total</th>
+                    <th className="text-center p-3 text-sm font-semibold uppercase tracking-wide w-16"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teams.map((team, index) => {
+                    const total = getAllocationTotal(team);
+                    const isValid = total === 100;
+                    
+                    return (
+                      <tr key={index} className="border-t hover-elevate" data-testid={`row-team-${index}`}>
+                        <td className="p-3">
                           <Input
-                            id={`equity-${index}`}
+                            value={team.name}
+                            onChange={(e) => updateTeam(index, "name", e.target.value)}
+                            placeholder="Enter team name"
+                            className="h-8"
+                            data-testid={`input-team-name-${index}`}
+                          />
+                        </td>
+                        <td className="p-3">
+                          <Input
                             type="number"
                             min="0"
                             max="100"
                             value={team.equity}
                             onChange={(e) => updateTeam(index, "equity", parseInt(e.target.value) || 0)}
+                            className="h-8 text-right"
                             data-testid={`input-equity-${index}`}
                           />
-                        </div>
-                        <div>
-                          <Label htmlFor={`debt-${index}`} className="text-[#DC2626]">Debt</Label>
+                        </td>
+                        <td className="p-3">
                           <Input
-                            id={`debt-${index}`}
                             type="number"
                             min="0"
                             max="100"
                             value={team.debt}
                             onChange={(e) => updateTeam(index, "debt", parseInt(e.target.value) || 0)}
+                            className="h-8 text-right"
                             data-testid={`input-debt-${index}`}
                           />
-                        </div>
-                        <div>
-                          <Label htmlFor={`gold-${index}`} className="text-[#F97316]">Gold</Label>
+                        </td>
+                        <td className="p-3">
                           <Input
-                            id={`gold-${index}`}
                             type="number"
                             min="0"
                             max="100"
                             value={team.gold}
                             onChange={(e) => updateTeam(index, "gold", parseInt(e.target.value) || 0)}
+                            className="h-8 text-right"
                             data-testid={`input-gold-${index}`}
                           />
-                        </div>
-                        <div>
-                          <Label htmlFor={`cash-${index}`} className="text-[#16A34A]">Cash</Label>
+                        </td>
+                        <td className="p-3">
                           <Input
-                            id={`cash-${index}`}
                             type="number"
                             min="0"
                             max="100"
                             value={team.cash}
                             onChange={(e) => updateTeam(index, "cash", parseInt(e.target.value) || 0)}
+                            className="h-8 text-right"
                             data-testid={`input-cash-${index}`}
                           />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                        </td>
+                        <td className="p-3 text-right">
+                          <span
+                            className={`font-mono font-semibold ${
+                              isValid ? "text-green-600" : "text-red-600"
+                            }`}
+                            data-testid={`text-allocation-total-${index}`}
+                          >
+                            {total}%
+                          </span>
+                        </td>
+                        <td className="p-3 text-center">
+                          {teams.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeTeam(index)}
+                              data-testid={`button-remove-team-${index}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <Button onClick={addTeam} variant="outline" size="sm" className="mt-4" data-testid="button-add-team">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Team
+            </Button>
           </CardContent>
         </Card>
 
