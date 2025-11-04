@@ -15,6 +15,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/game-setup" component={GameSetup} />
       <Route path="/configure-teams" component={ConfigureTeams} />
       <Route path="/start-round" component={StartRound} />

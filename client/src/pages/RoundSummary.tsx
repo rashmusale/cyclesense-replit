@@ -145,23 +145,8 @@ export default function RoundSummary() {
           </CardContent>
         </Card>
 
-        {/* NAV Calculation Status */}
-        {autoCalculateMutation.isPending && (
-          <Card className="mb-6 border-primary">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <div>
-                  <p className="font-semibold">Calculating NAVs...</p>
-                  <p className="text-sm text-muted-foreground">Applying color card returns to existing allocations</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Team NAV Results */}
-        {returnsRevealed && roundAllocations.length > 0 && (
+        {roundAllocations.length > 0 && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Team NAV Results</CardTitle>
@@ -200,7 +185,7 @@ export default function RoundSummary() {
         )}
 
         {/* Asset Returns Reveal */}
-        {returnsRevealed && (
+        {(
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -240,7 +225,7 @@ export default function RoundSummary() {
         )}
 
         {/* Black Card Prompt */}
-        {returnsRevealed && !round.blackCardId && (
+        {!round.blackCardId && (
           <Card className="mb-6 border-orange-500">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -295,7 +280,7 @@ export default function RoundSummary() {
         )}
 
         {/* Actions */}
-        {returnsRevealed && (round.blackCardId || !blackCardDialogOpen) && (
+        {(round.blackCardId || !blackCardDialogOpen) && (
           <div className="flex justify-center gap-4">
             <Button variant="outline" onClick={() => setLocation('/start-round')} data-testid="button-start-another-round">
               Start Another Round

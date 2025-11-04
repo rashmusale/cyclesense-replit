@@ -74,9 +74,7 @@ export default function TeamInput() {
         title: "Allocation Submitted",
         description: "Portfolio allocation has been recorded",
       });
-      // Stay on page - facilitator will navigate to results when all teams done
-      // In practice teams might submit via different devices
-      setLocation("/dashboard");
+      // Stay on page - facilitator will click "Compute Scores" when all teams are done
     },
     onError: (error: Error) => {
       toast({
