@@ -224,55 +224,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {chartData.length > 1 && (
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  NAV Progression
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis 
-                      dataKey="round" 
-                      label={{ value: 'Round', position: 'insideBottom', offset: -5 }}
-                      className="text-muted-foreground"
-                    />
-                    <YAxis 
-                      label={{ value: 'NAV', angle: -90, position: 'insideLeft' }}
-                      className="text-muted-foreground"
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '6px'
-                      }}
-                    />
-                    <Legend />
-                    {teams.map((team, idx) => {
-                      const colors = ['#F97316', '#2563EB', '#16A34A', '#DC2626', '#8B5CF6', '#EAB308'];
-                      const color = colors[idx % colors.length];
-                      return (
-                        <Line 
-                          key={team.id}
-                          type="monotone" 
-                          dataKey={team.name} 
-                          stroke={color} 
-                          strokeWidth={2} 
-                          dot={{ fill: color, r: 4 }} 
-                        />
-                      );
-                    })}
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
-
           <Tabs defaultValue="leaderboard" className="w-full">
             <TabsList className="mb-6">
               <TabsTrigger value="leaderboard" data-testid="tab-leaderboard">
@@ -289,6 +240,55 @@ export default function Dashboard() {
             </TabsList>
 
             <TabsContent value="leaderboard">
+              {chartData.length > 1 && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5" />
+                      NAV Progression
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis 
+                          dataKey="round" 
+                          label={{ value: 'Round', position: 'insideBottom', offset: -5 }}
+                          className="text-muted-foreground"
+                        />
+                        <YAxis 
+                          label={{ value: 'NAV', angle: -90, position: 'insideLeft' }}
+                          className="text-muted-foreground"
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '6px'
+                          }}
+                        />
+                        <Legend />
+                        {teams.map((team, idx) => {
+                          const colors = ['#F97316', '#2563EB', '#16A34A', '#DC2626', '#8B5CF6', '#EAB308'];
+                          const color = colors[idx % colors.length];
+                          return (
+                            <Line 
+                              key={team.id}
+                              type="monotone" 
+                              dataKey={team.name} 
+                              stroke={color} 
+                              strokeWidth={2} 
+                              dot={{ fill: color, r: 4 }} 
+                            />
+                          );
+                        })}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
               <div className="rounded-md border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">

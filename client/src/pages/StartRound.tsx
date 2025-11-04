@@ -214,35 +214,6 @@ export default function StartRound() {
                         <div className="text-sm text-muted-foreground mb-1">Market Event</div>
                         <div className="text-base" data-testid="text-card-text">{drawnCard.cardText}</div>
                       </div>
-                      <div className="border-t pt-4">
-                        <div className="text-sm font-semibold mb-3">Asset Returns</div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="flex justify-between items-center p-2 rounded bg-[#2563EB]/10">
-                            <span className="text-sm font-medium text-[#2563EB]">Equity</span>
-                            <span className="font-mono font-bold text-[#2563EB]" data-testid="text-equity-return">
-                              {parseFloat(drawnCard.equityReturn) > 0 ? "+" : ""}{drawnCard.equityReturn}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center p-2 rounded bg-[#DC2626]/10">
-                            <span className="text-sm font-medium text-[#DC2626]">Debt</span>
-                            <span className="font-mono font-bold text-[#DC2626]" data-testid="text-debt-return">
-                              {parseFloat(drawnCard.debtReturn) > 0 ? "+" : ""}{drawnCard.debtReturn}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center p-2 rounded bg-[#F97316]/10">
-                            <span className="text-sm font-medium text-[#F97316]">Gold</span>
-                            <span className="font-mono font-bold text-[#F97316]" data-testid="text-gold-return">
-                              {parseFloat(drawnCard.goldReturn) > 0 ? "+" : ""}{drawnCard.goldReturn}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center p-2 rounded bg-[#16A34A]/10">
-                            <span className="text-sm font-medium text-[#16A34A]">Cash</span>
-                            <span className="font-mono font-bold text-[#16A34A]" data-testid="text-cash-return">
-                              {parseFloat(drawnCard.cashReturn) > 0 ? "+" : ""}{drawnCard.cashReturn}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -328,35 +299,6 @@ export default function StartRound() {
                       <div>
                         <div className="text-sm text-muted-foreground mb-1">Market Event</div>
                         <div className="text-base" data-testid="text-card-text">{drawnCard.cardText}</div>
-                      </div>
-                      <div className="border-t pt-4">
-                        <div className="text-sm font-semibold mb-3">Asset Returns</div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="flex justify-between items-center p-2 rounded bg-[#2563EB]/10">
-                            <span className="text-sm font-medium text-[#2563EB]">Equity</span>
-                            <span className="font-mono font-bold text-[#2563EB]" data-testid="text-equity-return">
-                              {parseFloat(drawnCard.equityReturn) > 0 ? "+" : ""}{drawnCard.equityReturn}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center p-2 rounded bg-[#DC2626]/10">
-                            <span className="text-sm font-medium text-[#DC2626]">Debt</span>
-                            <span className="font-mono font-bold text-[#DC2626]" data-testid="text-debt-return">
-                              {parseFloat(drawnCard.debtReturn) > 0 ? "+" : ""}{drawnCard.debtReturn}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center p-2 rounded bg-[#F97316]/10">
-                            <span className="text-sm font-medium text-[#F97316]">Gold</span>
-                            <span className="font-mono font-bold text-[#F97316]" data-testid="text-gold-return">
-                              {parseFloat(drawnCard.goldReturn) > 0 ? "+" : ""}{drawnCard.goldReturn}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center p-2 rounded bg-[#16A34A]/10">
-                            <span className="text-sm font-medium text-[#16A34A]">Cash</span>
-                            <span className="font-mono font-bold text-[#16A34A]" data-testid="text-cash-return">
-                              {parseFloat(drawnCard.cashReturn) > 0 ? "+" : ""}{drawnCard.cashReturn}%
-                            </span>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </CardContent>

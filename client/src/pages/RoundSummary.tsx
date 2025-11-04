@@ -224,8 +224,8 @@ export default function RoundSummary() {
           </Card>
         )}
 
-        {/* Black Card Prompt - DISABLED (buggy NAV calculation) */}
-        {false && !round.blackCardId && (
+        {/* Black Card Prompt */}
+        {!round.blackCardId && (
           <Card className="mb-6 border-orange-500">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
