@@ -5,10 +5,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Trophy, TrendingUp, Plus, History } from "lucide-react";
+import { Download, Trophy, TrendingUp, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { Team, GameState, TeamAllocation, Round } from "@shared/schema";
@@ -28,8 +26,6 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [endGameModalOpen, setEndGameModalOpen] = useState(false);
-  const [showAddTeamForm, setShowAddTeamForm] = useState(false);
-  const [newTeamName, setNewTeamName] = useState("");
 
   const { data: gameState } = useQuery<GameState>({
     queryKey: ["/api/game-state"],
@@ -46,6 +42,11 @@ export default function Dashboard() {
   const { data: rounds = [] } = useQuery<Round[]>({
     queryKey: ["/api/rounds"],
   });
+
+  // Debug logging
+  console.log('Dashboard allAllocations:', allAllocations);
+  console.log('Dashboard rounds:', rounds);
+  console.log('Dashboard teams:', teams);
 
   const resetGameMutation = useMutation({
     mutationFn: async () => {
@@ -66,21 +67,6 @@ export default function Dashboard() {
     },
   });
 
-  const addTeamMutation = useMutation({
-    mutationFn: async (teamName: string) => {
-      const res = await apiRequest("POST", "/api/teams", { name: teamName });
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
-      toast({
-        title: "Team Added",
-        description: `${newTeamName} has been added with NAV 10.00`,
-      });
-      setNewTeamName("");
-      setShowAddTeamForm(false);
-    },
-  });
 
   const currentRound = gameState?.currentRound || 0;
   const hasStarted = gameState?.isActive || false;
@@ -161,11 +147,6 @@ export default function Dashboard() {
     return teamAllocs[0] || null;
   };
 
-  const handleAddTeam = () => {
-    if (newTeamName.trim()) {
-      addTeamMutation.mutate(newTeamName);
-    }
-  };
 
   if (!hasStarted) {
     return (
@@ -472,68 +453,6 @@ export default function Dashboard() {
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-
-        {/* Team Management Section */}
-        <div className="mt-12 border-t pt-8">
-          <h3 className="text-2xl font-bold mb-6">Team Management</h3>
-          
-          {showAddTeamForm ? (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Add New Team</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="team-name">Team Name</Label>
-                  <Input
-                    id="team-name"
-                    value={newTeamName}
-                    onChange={(e) => setNewTeamName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAddTeam();
-                      if (e.key === 'Escape') {
-                        setShowAddTeamForm(false);
-                        setNewTeamName('');
-                      }
-                    }}
-                    placeholder="Enter team name"
-                    autoFocus
-                    data-testid="input-new-team-name"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleAddTeam} 
-                    disabled={addTeamMutation.isPending}
-                    data-testid="button-save-team"
-                  >
-                    {addTeamMutation.isPending ? "Adding..." : "Add Team"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowAddTeamForm(false);
-                      setNewTeamName('');
-                    }}
-                    data-testid="button-cancel-add"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Button
-              onClick={() => setShowAddTeamForm(true)}
-              className="mb-6"
-              size="lg"
-              data-testid="button-add-team"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add New Team
-            </Button>
-          )}
         </div>
       </main>
 
