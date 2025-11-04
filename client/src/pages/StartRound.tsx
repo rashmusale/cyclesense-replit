@@ -100,7 +100,7 @@ export default function StartRound() {
   };
 
   const handleVirtualContinue = () => {
-    // Virtual mode: Create round and go to auto-calculate NAV
+    // Virtual mode: Create round and go to team input (returns hidden)
     if (!drawnCard) return;
     
     createRoundMutation.mutate();
@@ -123,12 +123,12 @@ export default function StartRound() {
       queryClient.invalidateQueries({ queryKey: ["/api/game-state"] });
       
       if (isVirtualMode) {
-        // Virtual mode: Go to round summary for auto NAV calculation
+        // Virtual mode: Go to team input (returns hidden)
         toast({
           title: "Round Started!",
-          description: `Calculating NAVs for Round ${nextRoundNumber}`,
+          description: `Teams can now enter allocations for Round ${nextRoundNumber}`,
         });
-        setLocation(`/round-summary?roundId=${data.id}`);
+        setLocation(`/team-input?roundId=${data.id}`);
       } else {
         // In-Person mode: Go to team input for allocations
         toast({
@@ -265,7 +265,7 @@ export default function StartRound() {
                     className="flex-1" 
                     data-testid="button-continue"
                   >
-                    {createRoundMutation.isPending ? "Starting..." : "Continue to NAV Calculation"}
+                    {createRoundMutation.isPending ? "Starting..." : "Continue to Team Input"}
                   </Button>
                 </div>
               </>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { EyeOff } from "lucide-react";
 import type { Team, GameState, Round, ColorCard } from "@shared/schema";
 
 export default function TeamInput() {
@@ -67,7 +68,9 @@ export default function TeamInput() {
         title: "Allocation Submitted",
         description: "Portfolio allocation has been recorded",
       });
-      setLocation("/");
+      // Stay on page - facilitator will navigate to results when all teams done
+      // In practice teams might submit via different devices
+      setLocation("/dashboard");
     },
     onError: (error: Error) => {
       toast({
@@ -88,6 +91,7 @@ export default function TeamInput() {
   };
 
   const isInPersonMode = gameState?.mode === "inperson";
+  const isVirtualMode = gameState?.mode === "virtual";
 
   if (!currentRound || !colorCard) {
     return (
@@ -117,32 +121,40 @@ export default function TeamInput() {
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           <Card>
             <CardHeader>
-              <CardTitle>Color Card Returns</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Asset Returns</CardTitle>
+                {isVirtualMode && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <EyeOff className="w-4 h-4" />
+                    <span>Hidden until NAV calculated</span>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-2 rounded bg-[#2563EB]/10">
                   <span className="font-medium text-[#2563EB]">Equity</span>
                   <span className="font-mono font-bold text-[#2563EB]" data-testid="text-equity-return">
-                    {parseFloat(colorCard.equityReturn) > 0 ? "+" : ""}{colorCard.equityReturn}%
+                    {isVirtualMode ? "???" : `${parseFloat(colorCard.equityReturn) > 0 ? "+" : ""}${colorCard.equityReturn}%`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-2 rounded bg-[#DC2626]/10">
                   <span className="font-medium text-[#DC2626]">Debt</span>
                   <span className="font-mono font-bold text-[#DC2626]" data-testid="text-debt-return">
-                    {parseFloat(colorCard.debtReturn) > 0 ? "+" : ""}{colorCard.debtReturn}%
+                    {isVirtualMode ? "???" : `${parseFloat(colorCard.debtReturn) > 0 ? "+" : ""}${colorCard.debtReturn}%`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-2 rounded bg-[#F97316]/10">
                   <span className="font-medium text-[#F97316]">Gold</span>
                   <span className="font-mono font-bold text-[#F97316]" data-testid="text-gold-return">
-                    {parseFloat(colorCard.goldReturn) > 0 ? "+" : ""}{colorCard.goldReturn}%
+                    {isVirtualMode ? "???" : `${parseFloat(colorCard.goldReturn) > 0 ? "+" : ""}${colorCard.goldReturn}%`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-2 rounded bg-[#16A34A]/10">
                   <span className="font-medium text-[#16A34A]">Cash</span>
                   <span className="font-mono font-bold text-[#16A34A]" data-testid="text-cash-return">
-                    {parseFloat(colorCard.cashReturn) > 0 ? "+" : ""}{colorCard.cashReturn}%
+                    {isVirtualMode ? "???" : `${parseFloat(colorCard.cashReturn) > 0 ? "+" : ""}${colorCard.cashReturn}%`}
                   </span>
                 </div>
               </div>

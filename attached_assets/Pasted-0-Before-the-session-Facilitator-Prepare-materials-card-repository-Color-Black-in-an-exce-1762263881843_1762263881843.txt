@@ -1,0 +1,86 @@
+0) Before the session (Facilitator)
+	•	Prepare materials: card repository (Color + Black) in an excel (card number, card text, equity return, debt return, gold return, cash return), team list, logo, and card images.
+	•	Decide the mode:
+	•	Virtual: die roll + card draws happens on screen.
+	•	In-Person: facilitator inputs the card from drop down.
+
+⸻
+
+1) Game Setup (Facilitator)
+	•	Pick Mode: Virtual or In-Person.
+Visible to all: the chosen mode.
+	•	Configure Teams: add team names and colors; confirm starting NAV = 10 for each team.
+Visible to all: team list and starting NAVs.
+	•	Set Initial Allocations (optional pre-set): Equity, Debt, Gold, Cash must total 100%.
+Visible to all: initial allocations display to all.
+
+⸻
+
+2) Start of a Round (Facilitator)
+	•	Start Round: create Round 1 (then 2, 3, …).
+Visible to all: “Round X” banner.
+	•	Virtual: run the rolling-die color animation; it lands on Green/Blue/Orange/Red., then click on draw card. The system draws a card of the chosen color randomly.
+	•	In-Person: facilitator selects the phase color.
+Visible to all: the chosen color (phase), and then chooses the card from dropdown
+Immediately visible to all: the card image, Title, and Card Text.
+Hidden for now: the asset returns (Equity, Debt, Gold, Cash).
+
+⸻
+
+3) Team Decisions (Teams → Facilitator)
+	•	Discussion: teams interpret the phase and card story.
+	•	Allocate Portfolio: each team sets % in Equity, Debt, Gold, Cash (must equal 100%)
+	•	Pitch: each team briefly explains its allocation logic.
+	•	Scoring input: facilitator enters Pitch and Emotion scores (e.g., 0–5).
+Keep returns hidden until all teams lock allocations and scores are entered.
+
+⸻
+
+4) Compute Scores (Facilitator)
+	•	Action: facilitator clicks Compute / proceeds to scoring.
+	•	What happens under the hood:
+	•	Portfolio return is calculated from allocations × card returns.
+	•	End NAV = Previous NAV × (1 + Portfolio Return) + Pitch + Emotion.
+	•	Now reveal to all:
+	•	The asset returns for the Color Card.
+	•	Team-wise portfolio return and updated NAVs.
+	•	The round summary panel.
+	•	Update Leaderboard: ranks and Top 3 highlighted.
+Visible to all.
+
+⸻
+
+5) Optional Twist — Black Card (Facilitator)
+	•	Prompt: “Do we apply a Black Card this round?”
+	•	If No: skip to step 6.
+	•	If Yes: In person mode: Select a Black Card from drop down. For virtual mode, draw a black card randomly.
+	•	Apply Black Card Impact on portfolio: Black Card adjusts returns (e.g., EqMod −3%, DebtMod +1%); no pitch and emotion score here.
+	•	Recompute NAVs: using modified returns.
+	•	Reveal to all:
+	•	Black Card image + title (and summary).
+	•	Adjusted returns and the revised NAVs.
+	•	Lock rule: No allocation changes after the Black Card decision.
+
+⸻
+
+6) Review & Close the Round (Facilitator)
+	•	Debrief (optional): quick reflection on behavior and market logic.
+	•	Confirm end of round:
+	•	Visible to all: updated Leaderboard and NAV line chart (teams across rounds).
+	•	Choice: “Start another round or End game?”
+
+⸻
+
+7) Between Rounds (Facilitator & Teams)
+
+	•	Undo / Go Back (optional control):
+	•	If pressed, you step back one stage within the current round (e.g., from computed state back to allocation entry).
+	•	Visible prompt to all: confirmation that the stage was rolled back.
+
+⸻
+
+8) End Game (Facilitator)
+	•	If “End Game” is pressed:
+	•	Auto-export game data (Teams, Rounds, Allocations, Scores, Returns, NAV) as Excel; also offer CSVs.
+	•	Visible to all: final Leaderboard and Top Performer (highest final NAV and return %).
+	•	Reset the session after download (clears data, ready for a new game)
