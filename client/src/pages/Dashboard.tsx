@@ -152,9 +152,6 @@ export default function Dashboard() {
             <CardTitle className="text-2xl">Welcome to CycleSense</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              No active game. Start by setting up a new game.
-            </p>
             <Button 
               onClick={() => setLocation('/game-setup')} 
               className="w-full"
