@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertGameStateSchema, insertTeamSchema, insertRoundSchema, insertTeamAllocationSchema, insertColorCardSchema } from "@shared/schema";
+import { insertGameStateSchema, insertTeamSchema, insertRoundSchema, insertTeamAllocationSchema, insertColorCardSchema, insertBlackCardSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -157,6 +157,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return;
     }
     res.json(card);
+  });
+
+  // Bulk import black cards
+  app.post("/api/black-cards/bulk", async (req, res) => {
+    try {
+      // Validate that body is an array
+      if (!Array.isArray(req.body)) {
+        res.status(400).json({ error: "Request body must be an array of cards" });
+        return;
+      }
+
+      // Validate each card with the schema
+      const validatedCards = req.body.map((card) => insertBlackCardSchema.parse(card));
+      
+      // Create the cards
+      const cards = await storage.bulkCreateBlackCards(validatedCards);
+      res.json(cards);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Invalid card data" });
+    }
+  });
+
+  // Delete all black cards
+  app.delete("/api/black-cards", async (req, res) => {
+    await storage.deleteAllBlackCards();
+    res.json({ success: true });
   });
 
   // ============ ROUND ROUTES ============

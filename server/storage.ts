@@ -41,6 +41,8 @@ export interface IStorage {
   getAllBlackCards(): Promise<BlackCard[]>;
   getBlackCard(id: string): Promise<BlackCard | undefined>;
   createBlackCard(card: InsertBlackCard): Promise<BlackCard>;
+  deleteAllBlackCards(): Promise<void>;
+  bulkCreateBlackCards(cards: InsertBlackCard[]): Promise<BlackCard[]>;
   
   // Rounds
   getAllRounds(): Promise<Round[]>;
@@ -201,6 +203,19 @@ export class MemStorage implements IStorage {
     };
     this.blackCards.set(id, card);
     return card;
+  }
+
+  async deleteAllBlackCards(): Promise<void> {
+    this.blackCards.clear();
+  }
+
+  async bulkCreateBlackCards(cards: InsertBlackCard[]): Promise<BlackCard[]> {
+    const created: BlackCard[] = [];
+    for (const insertCard of cards) {
+      const card = await this.createBlackCard(insertCard);
+      created.push(card);
+    }
+    return created;
   }
 
   // Rounds
