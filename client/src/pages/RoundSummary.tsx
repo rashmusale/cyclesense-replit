@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useSearch } from "wouter";
 import Header from "@/components/Header";
 import PhaseBadge from "@/components/PhaseBadge";
@@ -30,6 +30,7 @@ export default function RoundSummary() {
   const [returnsRevealed, setReturnsRevealed] = useState(false);
   const [blackCardDialogOpen, setBlackCardDialogOpen] = useState(false);
   const [selectedBlackCard, setSelectedBlackCard] = useState<BlackCard | null>(null);
+  const hasCalculatedRef = useRef(false);
 
   const { data: round } = useQuery<Round>({
     queryKey: ["/api/rounds", roundId],
@@ -52,6 +53,9 @@ export default function RoundSummary() {
   const { data: blackCards = [] } = useQuery<BlackCard[]>({
     queryKey: ["/api/black-cards"],
   });
+
+  // Get this round's allocations (MUST be declared before useEffect)
+  const roundAllocations = allocations.filter(a => a.roundId === roundId);
 
   // Get latest allocation for each team (before this round)
   const getLatestAllocation = (teamId: string) => {
@@ -100,21 +104,32 @@ export default function RoundSummary() {
     },
   });
 
-  // Auto-run calculation on mount
+  // Auto-run calculation on mount (only if no allocations exist for this round)
   useEffect(() => {
-    if (round && colorCard && teams.length > 0 && !returnsRevealed) {
+    // Prevent double execution with ref
+    if (hasCalculatedRef.current) return;
+    
+    if (round && colorCard && teams.length > 0 && roundAllocations.length === 0 && !returnsRevealed) {
+      hasCalculatedRef.current = true;
       autoCalculateMutation.mutate();
+    } else if (roundAllocations.length > 0) {
+      // Allocations already exist, just reveal them
+      setReturnsRevealed(true);
+      hasCalculatedRef.current = true;
     }
-  }, [round, colorCard, teams.length]);
+  }, [round, colorCard, teams.length, roundAllocations.length]);
 
   const applyBlackCardMutation = useMutation({
     mutationFn: async (blackCardId: string) => {
-      // Update round with black card
-      const res = await apiRequest("PATCH", `/api/rounds/${roundId}`, {
+      // Step 1: Update round with black card
+      await apiRequest("PATCH", `/api/rounds/${roundId}`, {
         blackCardId,
       });
       
-      // Recalculate all team NAVs with black card applied
+      // Step 2: Delete existing allocations for this round
+      await apiRequest("DELETE", `/api/allocations/round/${roundId}`, {});
+      
+      // Step 3: Recalculate all team NAVs with black card applied
       const promises = teams.map(async (team) => {
         const latestAlloc = getLatestAllocation(team.id);
         
@@ -131,8 +146,7 @@ export default function RoundSummary() {
         return await res.json();
       });
       
-      await Promise.all(promises);
-      return await res.json();
+      return await Promise.all(promises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rounds"] });
@@ -150,9 +164,6 @@ export default function RoundSummary() {
     setSelectedBlackCard(card);
     applyBlackCardMutation.mutate(card.id);
   };
-
-  // Get this round's allocations
-  const roundAllocations = allocations.filter(a => a.roundId === roundId);
 
   if (!round || !colorCard) {
     return (

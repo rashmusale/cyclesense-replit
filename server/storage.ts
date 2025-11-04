@@ -53,6 +53,7 @@ export interface IStorage {
   getTeamAllocation(id: string): Promise<TeamAllocation | undefined>;
   createTeamAllocation(allocation: InsertTeamAllocation): Promise<TeamAllocation>;
   updateTeamAllocation(id: string, updates: Partial<InsertTeamAllocation>): Promise<TeamAllocation | undefined>;
+  deleteAllocationsForRound(roundId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -261,6 +262,15 @@ export class MemStorage implements IStorage {
     const updated: TeamAllocation = { ...allocation, ...updates };
     this.teamAllocations.set(id, updated);
     return updated;
+  }
+
+  async deleteAllocationsForRound(roundId: string): Promise<void> {
+    const allocationsToDelete = Array.from(this.teamAllocations.values())
+      .filter(a => a.roundId === roundId);
+    
+    for (const alloc of allocationsToDelete) {
+      this.teamAllocations.delete(alloc.id);
+    }
   }
 }
 

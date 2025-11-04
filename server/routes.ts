@@ -221,6 +221,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============ TEAM ALLOCATION ROUTES ============
   
+  // Delete allocations for a round
+  app.delete("/api/allocations/round/:roundId", async (req, res) => {
+    await storage.deleteAllocationsForRound(req.params.roundId);
+    res.json({ success: true });
+  });
+  
   // Get allocations for a round
   app.get("/api/allocations/round/:roundId", async (req, res) => {
     const allocations = await storage.getAllocationsForRound(req.params.roundId);
