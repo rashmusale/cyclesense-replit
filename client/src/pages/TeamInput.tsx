@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { EyeOff } from "lucide-react";
-import type { Team, GameState, Round, ColorCard } from "@shared/schema";
+import type { Team, GameState, Round, ColorCard, TeamAllocation } from "@shared/schema";
 
 export default function TeamInput() {
   const [, setLocation] = useLocation();
@@ -41,10 +41,16 @@ export default function TeamInput() {
     enabled: !!currentRound?.colorCardId,
   });
 
+  const { data: allocations = [] } = useQuery<TeamAllocation[]>({
+    queryKey: ["/api/allocations"],
+  });
+
+  const roundAllocations = allocations.filter((a: TeamAllocation) => a.roundId === currentRound?.id);
+
   const allocationTotal = equity + debt + gold + cash;
 
   const submitAllocationMutation = useMutation({
-    mutationFn: async (teamId: number) => {
+    mutationFn: async (teamId: string) => {
       if (allocationTotal !== 100) {
         throw new Error("Allocations must total 100%");
       }
@@ -90,8 +96,6 @@ export default function TeamInput() {
     else if (asset === "cash") setCash(newValue);
   };
 
-  const isInPersonMode = gameState?.mode === "inperson";
-  const isVirtualMode = gameState?.mode === "virtual";
 
   if (!currentRound || !colorCard) {
     return (
@@ -123,12 +127,10 @@ export default function TeamInput() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Asset Returns</CardTitle>
-                {isVirtualMode && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <EyeOff className="w-4 h-4" />
-                    <span>Hidden until NAV calculated</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <EyeOff className="w-4 h-4" />
+                  <span>Hidden until scores computed</span>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -136,25 +138,25 @@ export default function TeamInput() {
                 <div className="flex justify-between items-center p-2 rounded bg-[#2563EB]/10">
                   <span className="font-medium text-[#2563EB]">Equity</span>
                   <span className="font-mono font-bold text-[#2563EB]" data-testid="text-equity-return">
-                    {isVirtualMode ? "???" : `${parseFloat(colorCard.equityReturn) > 0 ? "+" : ""}${colorCard.equityReturn}%`}
+                    ???
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-2 rounded bg-[#DC2626]/10">
                   <span className="font-medium text-[#DC2626]">Debt</span>
                   <span className="font-mono font-bold text-[#DC2626]" data-testid="text-debt-return">
-                    {isVirtualMode ? "???" : `${parseFloat(colorCard.debtReturn) > 0 ? "+" : ""}${colorCard.debtReturn}%`}
+                    ???
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-2 rounded bg-[#F97316]/10">
                   <span className="font-medium text-[#F97316]">Gold</span>
                   <span className="font-mono font-bold text-[#F97316]" data-testid="text-gold-return">
-                    {isVirtualMode ? "???" : `${parseFloat(colorCard.goldReturn) > 0 ? "+" : ""}${colorCard.goldReturn}%`}
+                    ???
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-2 rounded bg-[#16A34A]/10">
                   <span className="font-medium text-[#16A34A]">Cash</span>
                   <span className="font-mono font-bold text-[#16A34A]" data-testid="text-cash-return">
-                    {isVirtualMode ? "???" : `${parseFloat(colorCard.cashReturn) > 0 ? "+" : ""}${colorCard.cashReturn}%`}
+                    ???
                   </span>
                 </div>
               </div>
@@ -208,64 +210,90 @@ export default function TeamInput() {
           </Card>
         </div>
 
-        {isInPersonMode && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Scoring (In-Person Mode)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="pitch-score">Pitch Score</Label>
-                  <Input
-                    id="pitch-score"
-                    type="number"
-                    min="0"
-                    value={pitchScore}
-                    onChange={(e) => setPitchScore(parseInt(e.target.value) || 0)}
-                    data-testid="input-pitch-score"
-                  />
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Scoring (Facilitator)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="pitch-score">Pitch Score (0-5)</Label>
+                <Input
+                  id="pitch-score"
+                  type="number"
+                  min="0"
+                  max="5"
+                  value={pitchScore}
+                  onChange={(e) => setPitchScore(parseInt(e.target.value) || 0)}
+                  data-testid="input-pitch-score"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emotion-score">Emotion Score (0-5)</Label>
+                <Input
+                  id="emotion-score"
+                  type="number"
+                  min="0"
+                  max="5"
+                  value={emotionScore}
+                  onChange={(e) => setEmotionScore(parseInt(e.target.value) || 0)}
+                  data-testid="input-emotion-score"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Submit Team Allocation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3">
+              {teams.map(team => {
+                const hasAllocation = roundAllocations.some(a => a.teamId === team.id);
+                return (
+                  <Button
+                    key={team.id}
+                    onClick={() => submitAllocationMutation.mutate(team.id)}
+                    disabled={allocationTotal !== 100 || submitAllocationMutation.isPending}
+                    variant={hasAllocation ? "secondary" : "outline"}
+                    className="justify-start h-auto py-4"
+                    data-testid={`button-submit-team-${team.id}`}
+                  >
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-lg">{team.name}</span>
+                        {hasAllocation && <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded">✓ Submitted</span>}
+                      </div>
+                      <span className="text-sm text-muted-foreground">Current NAV: {team.currentNav}</span>
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {roundAllocations.length === teams.length && teams.length > 0 && (
+          <Card className="border-green-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-lg">All teams have submitted their allocations!</p>
+                  <p className="text-sm text-muted-foreground">Proceed to compute scores and reveal returns</p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="emotion-score">Emotion Score</Label>
-                  <Input
-                    id="emotion-score"
-                    type="number"
-                    min="0"
-                    value={emotionScore}
-                    onChange={(e) => setEmotionScore(parseInt(e.target.value) || 0)}
-                    data-testid="input-emotion-score"
-                  />
-                </div>
+                <Button
+                  onClick={() => setLocation(`/round-summary?roundId=${currentRound.id}`)}
+                  size="lg"
+                  data-testid="button-compute-scores"
+                >
+                  Compute Scores
+                </Button>
               </div>
             </CardContent>
           </Card>
         )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Team</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3">
-              {teams.map(team => (
-                <Button
-                  key={team.id}
-                  onClick={() => submitAllocationMutation.mutate(team.id)}
-                  disabled={allocationTotal !== 100 || submitAllocationMutation.isPending}
-                  variant="outline"
-                  className="justify-start h-auto py-4"
-                  data-testid={`button-submit-team-${team.id}`}
-                >
-                  <div className="flex flex-col items-start gap-1">
-                    <span className="font-semibold text-lg">{team.name}</span>
-                    <span className="text-sm text-muted-foreground">Current NAV: {team.currentNav}</span>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

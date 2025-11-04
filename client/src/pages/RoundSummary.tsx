@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import Header from "@/components/Header";
 import PhaseBadge from "@/components/PhaseBadge";
@@ -27,10 +27,8 @@ export default function RoundSummary() {
   const params = new URLSearchParams(search);
   const roundId = params.get('roundId');
 
-  const [returnsRevealed, setReturnsRevealed] = useState(false);
   const [blackCardDialogOpen, setBlackCardDialogOpen] = useState(false);
   const [selectedBlackCard, setSelectedBlackCard] = useState<BlackCard | null>(null);
-  const hasCalculatedRef = useRef(false);
 
   const { data: round } = useQuery<Round>({
     queryKey: ["/api/rounds", roundId],
@@ -54,70 +52,8 @@ export default function RoundSummary() {
     queryKey: ["/api/black-cards"],
   });
 
-  // Get this round's allocations (MUST be declared before useEffect)
+  // Get this round's allocations
   const roundAllocations = allocations.filter(a => a.roundId === roundId);
-
-  // Get latest allocation for each team (before this round)
-  const getLatestAllocation = (teamId: string) => {
-    const teamAllocs = allocations
-      .filter(a => a.teamId === teamId && a.roundId !== roundId);
-    
-    return teamAllocs[0] || {
-      teamId,
-      equity: 25,
-      debt: 25,
-      gold: 25,
-      cash: 25,
-      navAfter: "10.00"
-    };
-  };
-
-  // Auto-calculate NAV for all teams
-  const autoCalculateMutation = useMutation({
-    mutationFn: async () => {
-      const promises = teams.map(async (team) => {
-        const latestAlloc = getLatestAllocation(team.id);
-        
-        const res = await apiRequest("POST", "/api/allocations", {
-          teamId: team.id,
-          roundId,
-          equity: latestAlloc.equity,
-          debt: latestAlloc.debt,
-          gold: latestAlloc.gold,
-          cash: latestAlloc.cash,
-          pitchScore: 0,
-          emotionScore: 0,
-        });
-        return await res.json();
-      });
-      
-      return await Promise.all(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/allocations"] });
-      toast({
-        title: "NAV Calculated",
-        description: "All team NAVs have been updated",
-      });
-      setReturnsRevealed(true);
-    },
-  });
-
-  // Auto-run calculation on mount (only if no allocations exist for this round)
-  useEffect(() => {
-    // Prevent double execution with ref
-    if (hasCalculatedRef.current) return;
-    
-    if (round && colorCard && teams.length > 0 && roundAllocations.length === 0 && !returnsRevealed) {
-      hasCalculatedRef.current = true;
-      autoCalculateMutation.mutate();
-    } else if (roundAllocations.length > 0) {
-      // Allocations already exist, just reveal them
-      setReturnsRevealed(true);
-      hasCalculatedRef.current = true;
-    }
-  }, [round, colorCard, teams.length, roundAllocations.length]);
 
   const applyBlackCardMutation = useMutation({
     mutationFn: async (blackCardId: string) => {
@@ -126,22 +62,20 @@ export default function RoundSummary() {
         blackCardId,
       });
       
-      // Step 2: Delete existing allocations for this round
+      // Step 2: Delete existing allocations for this round (rollback NAVs)
       await apiRequest("DELETE", `/api/allocations/round/${roundId}`, {});
       
-      // Step 3: Recalculate all team NAVs with black card applied
-      const promises = teams.map(async (team) => {
-        const latestAlloc = getLatestAllocation(team.id);
-        
+      // Step 3: Recreate allocations with same data (server will recalc NAV with black card)
+      const promises = roundAllocations.map(async (alloc) => {
         const res = await apiRequest("POST", "/api/allocations", {
-          teamId: team.id,
+          teamId: alloc.teamId,
           roundId,
-          equity: latestAlloc.equity,
-          debt: latestAlloc.debt,
-          gold: latestAlloc.gold,
-          cash: latestAlloc.cash,
-          pitchScore: 0,
-          emotionScore: 0,
+          equity: alloc.equity,
+          debt: alloc.debt,
+          gold: alloc.gold,
+          cash: alloc.cash,
+          pitchScore: alloc.pitchScore,
+          emotionScore: alloc.emotionScore,
         });
         return await res.json();
       });
@@ -183,9 +117,9 @@ export default function RoundSummary() {
       
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Round {round.roundNumber} - Virtual Mode</h1>
+          <h1 className="text-4xl font-bold mb-2">Round {round.roundNumber} Results</h1>
           <p className="text-muted-foreground">
-            Automatic NAV calculation using existing allocations
+            Asset returns revealed and NAV scores calculated
           </p>
         </div>
 
