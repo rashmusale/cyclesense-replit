@@ -54,17 +54,16 @@ export default function RoundSummary() {
   });
 
   // Get latest allocation for each team (before this round)
-  const getLatestAllocation = (teamId: number) => {
+  const getLatestAllocation = (teamId: string) => {
     const teamAllocs = allocations
-      .filter(a => a.teamId === teamId && a.roundId !== roundId)
-      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      .filter(a => a.teamId === teamId && a.roundId !== roundId);
     
     return teamAllocs[0] || {
       teamId,
-      equityPct: 25,
-      debtPct: 25,
-      goldPct: 25,
-      cashPct: 25,
+      equity: 25,
+      debt: 25,
+      gold: 25,
+      cash: 25,
       navAfter: "10.00"
     };
   };
@@ -78,10 +77,10 @@ export default function RoundSummary() {
         const res = await apiRequest("POST", "/api/allocations", {
           teamId: team.id,
           roundId,
-          equityPct: latestAlloc.equityPct,
-          debtPct: latestAlloc.debtPct,
-          goldPct: latestAlloc.goldPct,
-          cashPct: latestAlloc.cashPct,
+          equity: latestAlloc.equity,
+          debt: latestAlloc.debt,
+          gold: latestAlloc.gold,
+          cash: latestAlloc.cash,
           pitchScore: 0,
           emotionScore: 0,
         });
@@ -109,7 +108,7 @@ export default function RoundSummary() {
   }, [round, colorCard, teams.length]);
 
   const applyBlackCardMutation = useMutation({
-    mutationFn: async (blackCardId: number) => {
+    mutationFn: async (blackCardId: string) => {
       // Update round with black card
       const res = await apiRequest("PATCH", `/api/rounds/${roundId}`, {
         blackCardId,
@@ -122,10 +121,10 @@ export default function RoundSummary() {
         const res = await apiRequest("POST", "/api/allocations", {
           teamId: team.id,
           roundId,
-          equityPct: latestAlloc.equityPct,
-          debtPct: latestAlloc.debtPct,
-          goldPct: latestAlloc.goldPct,
-          cashPct: latestAlloc.cashPct,
+          equity: latestAlloc.equity,
+          debt: latestAlloc.debt,
+          gold: latestAlloc.gold,
+          cash: latestAlloc.cash,
           pitchScore: 0,
           emotionScore: 0,
         });
@@ -238,7 +237,7 @@ export default function RoundSummary() {
                       <div>
                         <div className="font-semibold text-lg">{team.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          Allocation: E{allocation.equityPct}% D{allocation.debtPct}% G{allocation.goldPct}% C{allocation.cashPct}%
+                          Allocation: E{allocation.equity}% D{allocation.debt}% G{allocation.gold}% C{allocation.cash}%
                         </div>
                       </div>
                       <div className="text-right">
@@ -269,25 +268,25 @@ export default function RoundSummary() {
                 <div className="flex flex-col items-center justify-center p-4 rounded bg-[#2563EB]/10">
                   <span className="text-sm font-medium text-[#2563EB] mb-1">Equity</span>
                   <span className="font-mono font-bold text-2xl text-[#2563EB]">
-                    {parseFloat(colorCard.equityReturn) > 0 ? "+" : ""}{colorCard.equityReturn}%
+                    {Number(colorCard.equityReturn) > 0 ? "+" : ""}{colorCard.equityReturn}%
                   </span>
                 </div>
                 <div className="flex flex-col items-center justify-center p-4 rounded bg-[#DC2626]/10">
                   <span className="text-sm font-medium text-[#DC2626] mb-1">Debt</span>
                   <span className="font-mono font-bold text-2xl text-[#DC2626]">
-                    {parseFloat(colorCard.debtReturn) > 0 ? "+" : ""}{colorCard.debtReturn}%
+                    {Number(colorCard.debtReturn) > 0 ? "+" : ""}{colorCard.debtReturn}%
                   </span>
                 </div>
                 <div className="flex flex-col items-center justify-center p-4 rounded bg-[#F97316]/10">
                   <span className="text-sm font-medium text-[#F97316] mb-1">Gold</span>
                   <span className="font-mono font-bold text-2xl text-[#F97316]">
-                    {parseFloat(colorCard.goldReturn) > 0 ? "+" : ""}{colorCard.goldReturn}%
+                    {Number(colorCard.goldReturn) > 0 ? "+" : ""}{colorCard.goldReturn}%
                   </span>
                 </div>
                 <div className="flex flex-col items-center justify-center p-4 rounded bg-[#16A34A]/10">
                   <span className="text-sm font-medium text-[#16A34A] mb-1">Cash</span>
                   <span className="font-mono font-bold text-2xl text-[#16A34A]">
-                    {parseFloat(colorCard.cashReturn) > 0 ? "+" : ""}{colorCard.cashReturn}%
+                    {Number(colorCard.cashReturn) > 0 ? "+" : ""}{colorCard.cashReturn}%
                   </span>
                 </div>
               </div>
@@ -339,10 +338,10 @@ export default function RoundSummary() {
                 <div>
                   <div className="text-sm text-muted-foreground mb-1">Modifiers</div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div className="text-sm">Equity: {selectedBlackCard.equityModifier > 0 ? '+' : ''}{selectedBlackCard.equityModifier}%</div>
-                    <div className="text-sm">Debt: {selectedBlackCard.debtModifier > 0 ? '+' : ''}{selectedBlackCard.debtModifier}%</div>
-                    <div className="text-sm">Gold: {selectedBlackCard.goldModifier > 0 ? '+' : ''}{selectedBlackCard.goldModifier}%</div>
-                    <div className="text-sm">Cash: {selectedBlackCard.cashModifier > 0 ? '+' : ''}{selectedBlackCard.cashModifier}%</div>
+                    <div className="text-sm">Equity: {Number(selectedBlackCard.equityModifier) > 0 ? '+' : ''}{selectedBlackCard.equityModifier}%</div>
+                    <div className="text-sm">Debt: {Number(selectedBlackCard.debtModifier) > 0 ? '+' : ''}{selectedBlackCard.debtModifier}%</div>
+                    <div className="text-sm">Gold: {Number(selectedBlackCard.goldModifier) > 0 ? '+' : ''}{selectedBlackCard.goldModifier}%</div>
+                    <div className="text-sm">Cash: {Number(selectedBlackCard.cashModifier) > 0 ? '+' : ''}{selectedBlackCard.cashModifier}%</div>
                   </div>
                 </div>
               </div>
@@ -383,10 +382,10 @@ export default function RoundSummary() {
                 <div className="font-semibold mb-1">{card.cardNumber} - {card.title}</div>
                 <div className="text-sm text-muted-foreground mb-2">{card.cardText}</div>
                 <div className="flex gap-4 text-xs">
-                  <span>E: {card.equityModifier > 0 ? '+' : ''}{card.equityModifier}%</span>
-                  <span>D: {card.debtModifier > 0 ? '+' : ''}{card.debtModifier}%</span>
-                  <span>G: {card.goldModifier > 0 ? '+' : ''}{card.goldModifier}%</span>
-                  <span>C: {card.cashModifier > 0 ? '+' : ''}{card.cashModifier}%</span>
+                  <span>E: {Number(card.equityModifier) > 0 ? '+' : ''}{card.equityModifier}%</span>
+                  <span>D: {Number(card.debtModifier) > 0 ? '+' : ''}{card.debtModifier}%</span>
+                  <span>G: {Number(card.goldModifier) > 0 ? '+' : ''}{card.goldModifier}%</span>
+                  <span>C: {Number(card.cashModifier) > 0 ? '+' : ''}{card.cashModifier}%</span>
                 </div>
               </div>
             ))}
