@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -6,21 +6,26 @@ import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { EyeOff } from "lucide-react";
-import type { Team, GameState, Round, ColorCard, TeamAllocation } from "@shared/schema";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import type { Team, GameState, Round, ColorCard } from "@shared/schema";
+
+interface TeamAllocationData {
+  equity: number;
+  debt: number;
+  gold: number;
+  cash: number;
+  pitchScore: number;
+  emotionScore: number;
+}
 
 export default function TeamInput() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  const [equity, setEquity] = useState(25);
-  const [debt, setDebt] = useState(25);
-  const [gold, setGold] = useState(25);
-  const [cash, setCash] = useState(25);
-  const [pitchScore, setPitchScore] = useState(0);
-  const [emotionScore, setEmotionScore] = useState(0);
+  // State: object keyed by teamId
+  const [teamData, setTeamData] = useState<Record<string, TeamAllocationData>>({});
 
   const { data: gameState } = useQuery<GameState>({
     queryKey: ["/api/game-state"],
@@ -41,40 +46,83 @@ export default function TeamInput() {
     enabled: !!currentRound?.colorCardId,
   });
 
-  const { data: allocations = [] } = useQuery<TeamAllocation[]>({
-    queryKey: ["/api/allocations"],
-  });
+  // Initialize team data with default values
+  useEffect(() => {
+    if (teams.length > 0 && Object.keys(teamData).length === 0) {
+      const initialData: Record<string, TeamAllocationData> = {};
+      teams.forEach(team => {
+        initialData[team.id] = {
+          equity: 25,
+          debt: 25,
+          gold: 25,
+          cash: 25,
+          pitchScore: 0,
+          emotionScore: 0,
+        };
+      });
+      setTeamData(initialData);
+    }
+  }, [teams]);
 
-  const roundAllocations = allocations.filter((a: TeamAllocation) => a.roundId === currentRound?.id);
+  const updateTeamField = (teamId: string, field: keyof TeamAllocationData, value: number) => {
+    setTeamData(prev => ({
+      ...prev,
+      [teamId]: {
+        ...prev[teamId],
+        [field]: Math.max(0, field === 'pitchScore' || field === 'emotionScore' ? Math.min(5, value) : Math.min(100, value))
+      }
+    }));
+  };
 
-  const allocationTotal = equity + debt + gold + cash;
+  const getAllocationTotal = (teamId: string) => {
+    const data = teamData[teamId];
+    if (!data) return 0;
+    return data.equity + data.debt + data.gold + data.cash;
+  };
 
-  const submitAllocationMutation = useMutation({
-    mutationFn: async (teamId: string) => {
-      if (allocationTotal !== 100) {
-        throw new Error("Allocations must total 100%");
+  const isValidAllocation = (teamId: string) => {
+    return getAllocationTotal(teamId) === 100;
+  };
+
+  const allAllocationsValid = teams.every(team => isValidAllocation(team.id));
+
+  const submitAllMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentRound) throw new Error("No active round");
+      
+      // Validate all teams
+      for (const team of teams) {
+        if (!isValidAllocation(team.id)) {
+          throw new Error(`${team.name} allocations must total 100%`);
+        }
       }
 
-      const res = await apiRequest("POST", "/api/allocations", {
-        teamId,
-        roundId: currentRound?.id,
-        equity,
-        debt,
-        gold,
-        cash,
-        pitchScore,
-        emotionScore
+      // Submit all teams sequentially
+      const promises = teams.map(team => {
+        const data = teamData[team.id];
+        return apiRequest("POST", "/api/allocations", {
+          teamId: team.id,
+          roundId: currentRound.id,
+          equity: data.equity,
+          debt: data.debt,
+          gold: data.gold,
+          cash: data.cash,
+          pitchScore: data.pitchScore,
+          emotionScore: data.emotionScore,
+        });
       });
-      return await res.json();
+      
+      await Promise.all(promises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       queryClient.invalidateQueries({ queryKey: ["/api/allocations"] });
       toast({
-        title: "Allocation Submitted",
-        description: "Portfolio allocation has been recorded",
+        title: "All Allocations Submitted",
+        description: "Navigating to results...",
       });
-      // Stay on page - facilitator will click "Compute Scores" when all teams are done
+      // Navigate to round summary
+      setLocation(`/round-summary?roundId=${currentRound?.id}`);
     },
     onError: (error: Error) => {
       toast({
@@ -84,16 +132,6 @@ export default function TeamInput() {
       });
     }
   });
-
-  const handleSliderChange = (asset: string, value: number) => {
-    const newValue = Math.max(0, Math.min(100, value));
-    
-    if (asset === "equity") setEquity(newValue);
-    else if (asset === "debt") setDebt(newValue);
-    else if (asset === "gold") setGold(newValue);
-    else if (asset === "cash") setCash(newValue);
-  };
-
 
   if (!currentRound || !colorCard) {
     return (
@@ -114,184 +152,154 @@ export default function TeamInput() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-4xl font-bold mb-2">Portfolio Allocation - Round {currentRound.roundNumber}</h1>
-          <p className="text-muted-foreground">Enter your team's asset allocation (must total 100%)</p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Asset Returns</CardTitle>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <EyeOff className="w-4 h-4" />
-                  <span>Hidden until scores computed</span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-2 rounded bg-[#2563EB]/10">
-                  <span className="font-medium text-[#2563EB]">Equity</span>
-                  <span className="font-mono font-bold text-[#2563EB]" data-testid="text-equity-return">
-                    ???
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-2 rounded bg-[#DC2626]/10">
-                  <span className="font-medium text-[#DC2626]">Debt</span>
-                  <span className="font-mono font-bold text-[#DC2626]" data-testid="text-debt-return">
-                    ???
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-2 rounded bg-[#F97316]/10">
-                  <span className="font-medium text-[#F97316]">Gold</span>
-                  <span className="font-mono font-bold text-[#F97316]" data-testid="text-gold-return">
-                    ???
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-2 rounded bg-[#16A34A]/10">
-                  <span className="font-medium text-[#16A34A]">Cash</span>
-                  <span className="font-mono font-bold text-[#16A34A]" data-testid="text-cash-return">
-                    ???
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Allocation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  { name: "Equity", value: equity, setter: setEquity, color: "#2563EB" },
-                  { name: "Debt", value: debt, setter: setDebt, color: "#DC2626" },
-                  { name: "Gold", value: gold, setter: setGold, color: "#F97316" },
-                  { name: "Cash", value: cash, setter: setCash, color: "#16A34A" }
-                ].map(asset => (
-                  <div key={asset.name} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor={asset.name.toLowerCase()}>{asset.name}</Label>
-                      <span className="font-mono font-bold" style={{ color: asset.color }}>
-                        {asset.value}%
-                      </span>
-                    </div>
-                    <Input
-                      id={asset.name.toLowerCase()}
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={asset.value}
-                      onChange={(e) => handleSliderChange(asset.name.toLowerCase(), parseInt(e.target.value) || 0)}
-                      data-testid={`input-${asset.name.toLowerCase()}`}
-                    />
-                  </div>
-                ))}
-                
-                <div className="border-t pt-4 mt-4">
-                  <div className="flex justify-between items-center text-lg font-bold">
-                    <span>Total</span>
-                    <span className={allocationTotal === 100 ? "text-green-600" : "text-red-600"} data-testid="text-total">
-                      {allocationTotal}%
-                    </span>
-                  </div>
-                  {allocationTotal !== 100 && (
-                    <p className="text-sm text-red-600 mt-1">Allocations must total 100%</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <h1 className="text-4xl font-bold mb-2">Round {currentRound.roundNumber} - Team Allocations</h1>
+          <p className="text-muted-foreground">Enter allocations for all teams (each must total 100%)</p>
         </div>
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Scoring (Facilitator)</CardTitle>
+            <CardTitle>Market Event</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pitch-score">Pitch Score (0-5)</Label>
-                <Input
-                  id="pitch-score"
-                  type="number"
-                  min="0"
-                  max="5"
-                  value={pitchScore}
-                  onChange={(e) => setPitchScore(parseInt(e.target.value) || 0)}
-                  data-testid="input-pitch-score"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="emotion-score">Emotion Score (0-5)</Label>
-                <Input
-                  id="emotion-score"
-                  type="number"
-                  min="0"
-                  max="5"
-                  value={emotionScore}
-                  onChange={(e) => setEmotionScore(parseInt(e.target.value) || 0)}
-                  data-testid="input-emotion-score"
-                />
-              </div>
+            <div className="flex items-center gap-3">
+              <div className="font-mono text-lg font-semibold">{colorCard.cardNumber}</div>
+              <div className="text-base">{colorCard.cardText}</div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Submit Team Allocation</CardTitle>
+            <CardTitle>Team Allocations & Scores</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3">
-              {teams.map(team => {
-                const hasAllocation = roundAllocations.some(a => a.teamId === team.id);
-                return (
-                  <Button
-                    key={team.id}
-                    onClick={() => submitAllocationMutation.mutate(team.id)}
-                    disabled={allocationTotal !== 100 || submitAllocationMutation.isPending}
-                    variant={hasAllocation ? "secondary" : "outline"}
-                    className="justify-start h-auto py-4"
-                    data-testid={`button-submit-team-${team.id}`}
-                  >
-                    <div className="flex flex-col items-start gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-lg">{team.name}</span>
-                        {hasAllocation && <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded">✓ Submitted</span>}
-                      </div>
-                      <span className="text-sm text-muted-foreground">Current NAV: {team.currentNav}</span>
-                    </div>
-                  </Button>
-                );
-              })}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[180px]">Team Name</TableHead>
+                    <TableHead className="text-center w-[100px]">Equity %</TableHead>
+                    <TableHead className="text-center w-[100px]">Debt %</TableHead>
+                    <TableHead className="text-center w-[100px]">Gold %</TableHead>
+                    <TableHead className="text-center w-[100px]">Cash %</TableHead>
+                    <TableHead className="text-center w-[100px]">Pitch (0-5)</TableHead>
+                    <TableHead className="text-center w-[100px]">Emotion (0-5)</TableHead>
+                    <TableHead className="text-center w-[80px]">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {teams.map(team => {
+                    const data = teamData[team.id] || {
+                      equity: 25,
+                      debt: 25,
+                      gold: 25,
+                      cash: 25,
+                      pitchScore: 0,
+                      emotionScore: 0,
+                    };
+                    const total = getAllocationTotal(team.id);
+                    const isValid = total === 100;
+
+                    return (
+                      <TableRow key={team.id}>
+                        <TableCell className="font-semibold">{team.name}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={data.equity}
+                            onChange={(e) => updateTeamField(team.id, 'equity', parseInt(e.target.value) || 0)}
+                            className="text-center font-mono"
+                            data-testid={`input-equity-${team.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={data.debt}
+                            onChange={(e) => updateTeamField(team.id, 'debt', parseInt(e.target.value) || 0)}
+                            className="text-center font-mono"
+                            data-testid={`input-debt-${team.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={data.gold}
+                            onChange={(e) => updateTeamField(team.id, 'gold', parseInt(e.target.value) || 0)}
+                            className="text-center font-mono"
+                            data-testid={`input-gold-${team.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={data.cash}
+                            onChange={(e) => updateTeamField(team.id, 'cash', parseInt(e.target.value) || 0)}
+                            className="text-center font-mono"
+                            data-testid={`input-cash-${team.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="5"
+                            value={data.pitchScore}
+                            onChange={(e) => updateTeamField(team.id, 'pitchScore', parseInt(e.target.value) || 0)}
+                            className="text-center font-mono"
+                            data-testid={`input-pitch-${team.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="5"
+                            value={data.emotionScore}
+                            onChange={(e) => updateTeamField(team.id, 'emotionScore', parseInt(e.target.value) || 0)}
+                            className="text-center font-mono"
+                            data-testid={`input-emotion-${team.id}`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {isValid ? (
+                            <CheckCircle className="w-5 h-5 text-green-500 inline" data-testid={`status-valid-${team.id}`} />
+                          ) : (
+                            <div className="flex flex-col items-center gap-1">
+                              <AlertCircle className="w-5 h-5 text-red-500" data-testid={`status-invalid-${team.id}`} />
+                              <span className="text-xs text-red-500">{total}%</span>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
 
-        {roundAllocations.length === teams.length && teams.length > 0 && (
-          <Card className="border-green-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-lg">All teams have submitted their allocations!</p>
-                  <p className="text-sm text-muted-foreground">Proceed to compute scores and reveal returns</p>
-                </div>
-                <Button
-                  onClick={() => setLocation(`/round-summary?roundId=${currentRound.id}`)}
-                  size="lg"
-                  data-testid="button-compute-scores"
-                >
-                  Compute Scores
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <div className="flex justify-center">
+          <Button
+            onClick={() => submitAllMutation.mutate()}
+            disabled={!allAllocationsValid || submitAllMutation.isPending}
+            size="lg"
+            data-testid="button-submit-compute"
+          >
+            {submitAllMutation.isPending ? "Submitting..." : "Submit All & Compute Scores"}
+          </Button>
+        </div>
       </div>
     </div>
   );
