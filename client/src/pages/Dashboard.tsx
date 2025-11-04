@@ -1,162 +1,323 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import Header from "@/components/Header";
-import LeaderboardTable from "@/components/LeaderboardTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ResetGameModal from "@/components/ResetGameModal";
-import { Download, PieChart } from "lucide-react";
+import { Download, Trophy, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import type { Team, GameState, TeamAllocation, Round } from "@shared/schema";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [resetModalOpen, setResetModalOpen] = useState(false);
 
-  const mockTeams = [
-    { 
-      id: 1, 
-      name: 'Team Alpha', 
-      navCurrent: 15.75, 
-      pitchTotal: 12, 
-      emotionTotal: 8,
-      latestAllocation: { equity: 40, debt: 30, gold: 20, cash: 10 }
-    },
-    { 
-      id: 2, 
-      name: 'Team Beta', 
-      navCurrent: 14.20, 
-      pitchTotal: 10, 
-      emotionTotal: 11,
-      latestAllocation: { equity: 50, debt: 25, gold: 15, cash: 10 }
-    },
-    { 
-      id: 3, 
-      name: 'Team Gamma', 
-      navCurrent: 13.45, 
-      pitchTotal: 9, 
-      emotionTotal: 9,
-      latestAllocation: { equity: 35, debt: 35, gold: 20, cash: 10 }
-    },
-    { 
-      id: 4, 
-      name: 'Team Delta', 
-      navCurrent: 12.80, 
-      pitchTotal: 11, 
-      emotionTotal: 7,
-      latestAllocation: { equity: 30, debt: 40, gold: 20, cash: 10 }
-    },
-  ];
+  const { data: gameState } = useQuery<GameState>({
+    queryKey: ["/api/game-state"],
+  });
 
-  const currentRound = 3;
-  
-  // Calculate return as (latest NAV / 10) - 1
-  const teamsWithReturns = mockTeams.map(team => ({
-    ...team,
-    returnPct: ((team.navCurrent / 10) - 1) * 100
-  }));
+  const { data: teams = [] } = useQuery<Team[]>({
+    queryKey: ["/api/teams"],
+  });
 
-  // Mock NAV progression data for line chart
-  const navProgressionData = [
-    { round: 0, 'Team Alpha': 10, 'Team Beta': 10, 'Team Gamma': 10, 'Team Delta': 10 },
-    { round: 1, 'Team Alpha': 11.2, 'Team Beta': 10.8, 'Team Gamma': 10.5, 'Team Delta': 10.3 },
-    { round: 2, 'Team Alpha': 13.5, 'Team Beta': 12.1, 'Team Gamma': 11.8, 'Team Delta': 11.2 },
-    { round: 3, 'Team Alpha': 15.75, 'Team Beta': 14.20, 'Team Gamma': 13.45, 'Team Delta': 12.80 },
-  ];
+  const { data: allAllocations = [] } = useQuery<TeamAllocation[]>({
+    queryKey: ["/api/allocations"],
+  });
+
+  const { data: rounds = [] } = useQuery<Round[]>({
+    queryKey: ["/api/rounds"],
+  });
+
+  const resetGameMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/game/reset", {});
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/game-state"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/rounds"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/allocations"] });
+      toast({
+        title: "Game Reset",
+        description: "All game data has been cleared",
+      });
+      setResetModalOpen(false);
+    },
+  });
+
+  const currentRound = gameState?.currentRound || 0;
+  const hasStarted = gameState?.isActive || false;
+
+  // Calculate ROI as (current NAV / 10) - 1
+  const teamsWithReturns = teams
+    .map(team => ({
+      ...team,
+      returnPct: ((parseFloat(team.currentNav) / 10) - 1) * 100
+    }))
+    .sort((a, b) => parseFloat(b.currentNav) - parseFloat(a.currentNav));
+
+  // Build NAV progression data using round numbers
+  const navProgressionData = () => {
+    const data: any[] = [{ round: 0 }];
+    teams.forEach(team => {
+      data[0][team.name] = 10;
+    });
+
+    // Create a map from roundId (UUID) to roundNumber
+    const roundIdToNumber = new Map<string, number>();
+    rounds.forEach(round => {
+      roundIdToNumber.set(round.id, round.roundNumber);
+    });
+
+    // Group allocations by round number (not roundId)
+    const allocationsByRoundNumber = new Map<number, TeamAllocation[]>();
+    allAllocations.forEach(alloc => {
+      const roundNumber = roundIdToNumber.get(alloc.roundId);
+      if (roundNumber !== undefined) {
+        if (!allocationsByRoundNumber.has(roundNumber)) {
+          allocationsByRoundNumber.set(roundNumber, []);
+        }
+        allocationsByRoundNumber.get(roundNumber)!.push(alloc);
+      }
+    });
+
+    // Sort by round number and build chart data
+    const sortedRoundNumbers = Array.from(allocationsByRoundNumber.keys()).sort((a, b) => a - b);
+    sortedRoundNumbers.forEach(roundNumber => {
+      const allocations = allocationsByRoundNumber.get(roundNumber)!;
+      const roundData: any = { round: roundNumber };
+      allocations.forEach(alloc => {
+        const team = teams.find(t => t.id === alloc.teamId);
+        if (team) {
+          roundData[team.name] = parseFloat(alloc.navAfter);
+        }
+      });
+      data.push(roundData);
+    });
+
+    return data;
+  };
+
+  const chartData = navProgressionData();
 
   const handleExport = () => {
     toast({
       title: "Export Started",
       description: "Downloading game data as CSV...",
     });
-    console.log('Export CSV triggered');
   };
 
-  const handleResetGame = (keepTeams: boolean) => {
-    toast({
-      title: "Game Reset",
-      description: keepTeams ? "All rounds cleared. Teams preserved." : "All data cleared.",
+  const getLatestAllocation = (teamId: number) => {
+    // Create a map from roundId to roundNumber for sorting
+    const roundIdToNumber = new Map<string, number>();
+    rounds.forEach(round => {
+      roundIdToNumber.set(round.id, round.roundNumber);
     });
-    console.log('Reset game, keep teams:', keepTeams);
+
+    const teamAllocs = allAllocations
+      .filter(a => a.teamId === teamId)
+      .sort((a, b) => {
+        const roundNumA = roundIdToNumber.get(a.roundId) || 0;
+        const roundNumB = roundIdToNumber.get(b.roundId) || 0;
+        return roundNumB - roundNumA; // Sort descending (latest first)
+      });
+    return teamAllocs[0] || null;
   };
+
+  if (!hasStarted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl">Welcome to CycleSense</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              No active game. Start by setting up a new game.
+            </p>
+            <Button 
+              onClick={() => setLocation('/game-setup')} 
+              className="w-full"
+              size="lg"
+              data-testid="button-new-game"
+            >
+              New Game
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Header
-        currentRound={currentRound}
-        onNewRound={() => setLocation('/start-round')}
-        onConfigureTeams={() => setLocation('/configure-teams')}
-        onNewGame={() => setResetModalOpen(true)}
-      />
+      <Header />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
             <div>
-              <h2 className="text-4xl font-bold mb-2">Current Leaderboard</h2>
-              <p className="text-muted-foreground">Round {currentRound} Complete</p>
+              <h2 className="text-4xl font-bold mb-2">Leaderboard</h2>
+              <p className="text-muted-foreground">
+                {currentRound === 0 ? "No rounds completed yet" : `Round ${currentRound} Complete`}
+              </p>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={handleExport}
-              data-testid="button-export-csv"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
+            <div className="flex gap-2 flex-wrap">
+              <Button 
+                variant="outline" 
+                onClick={handleExport}
+                data-testid="button-export-csv"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setResetModalOpen(true)}
+                data-testid="button-reset-game"
+              >
+                Reset Game
+              </Button>
+              {currentRound > 0 && (
+                <Button 
+                  onClick={() => setLocation('/start-round')}
+                  data-testid="button-next-round"
+                >
+                  Start Round {currentRound + 1}
+                </Button>
+              )}
+              {currentRound === 0 && (
+                <Button 
+                  onClick={() => setLocation('/start-round')}
+                  data-testid="button-start-first-round"
+                >
+                  Start First Round
+                </Button>
+              )}
+              <Button 
+                onClick={() => setLocation('/team-input')}
+                variant="default"
+                data-testid="button-enter-allocations"
+              >
+                Enter Allocations
+              </Button>
+            </div>
           </div>
 
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="text-lg">NAV Progression</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={navProgressionData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="round" 
-                    label={{ value: 'Round', position: 'insideBottom', offset: -5 }}
-                    className="text-muted-foreground"
-                  />
-                  <YAxis 
-                    label={{ value: 'NAV', angle: -90, position: 'insideLeft' }}
-                    className="text-muted-foreground"
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px'
-                    }}
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="Team Alpha" stroke="#F97316" strokeWidth={2} dot={{ fill: '#F97316', r: 4 }} />
-                  <Line type="monotone" dataKey="Team Beta" stroke="#2563EB" strokeWidth={2} dot={{ fill: '#2563EB', r: 4 }} />
-                  <Line type="monotone" dataKey="Team Gamma" stroke="#16A34A" strokeWidth={2} dot={{ fill: '#16A34A', r: 4 }} />
-                  <Line type="monotone" dataKey="Team Delta" stroke="#DC2626" strokeWidth={2} dot={{ fill: '#DC2626', r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          {chartData.length > 1 && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  NAV Progression
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="round" 
+                      label={{ value: 'Round', position: 'insideBottom', offset: -5 }}
+                      className="text-muted-foreground"
+                    />
+                    <YAxis 
+                      label={{ value: 'NAV', angle: -90, position: 'insideLeft' }}
+                      className="text-muted-foreground"
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px'
+                      }}
+                    />
+                    <Legend />
+                    {teams.map((team, idx) => {
+                      const colors = ['#F97316', '#2563EB', '#16A34A', '#DC2626', '#8B5CF6', '#EAB308'];
+                      const color = colors[idx % colors.length];
+                      return (
+                        <Line 
+                          key={team.id}
+                          type="monotone" 
+                          dataKey={team.name} 
+                          stroke={color} 
+                          strokeWidth={2} 
+                          dot={{ fill: color, r: 4 }} 
+                        />
+                      );
+                    })}
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
 
           <Tabs defaultValue="leaderboard" className="w-full">
             <TabsList className="mb-6">
               <TabsTrigger value="leaderboard" data-testid="tab-leaderboard">
+                <Trophy className="w-4 h-4 mr-2" />
                 Leaderboard
               </TabsTrigger>
               <TabsTrigger value="allocations" data-testid="tab-allocations">
                 Current Allocations
               </TabsTrigger>
-              <TabsTrigger value="history" data-testid="tab-history">
-                Allocation History
-              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="leaderboard">
-              <LeaderboardTable teams={teamsWithReturns} />
+              <div className="rounded-md border border-border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gradient-to-r from-[#2563EB]/10 via-[#16A34A]/10 to-[#F97316]/10">
+                      <tr>
+                        <th className="text-left p-4 text-sm font-semibold uppercase tracking-wide">Rank</th>
+                        <th className="text-left p-4 text-sm font-semibold uppercase tracking-wide">Team</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Current NAV</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">ROI %</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Pitch Total</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Emotion Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {teamsWithReturns.map((team, idx) => (
+                        <tr key={team.id} className="border-t hover-elevate" data-testid={`row-team-${team.id}`}>
+                          <td className="p-4">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 font-bold text-primary">
+                              {idx + 1}
+                            </div>
+                          </td>
+                          <td className="p-4 font-semibold text-lg">{team.name}</td>
+                          <td className="p-4 text-right">
+                            <span className="font-mono font-bold text-2xl">{team.currentNav}</span>
+                          </td>
+                          <td className="p-4 text-right">
+                            <span className={`font-mono font-semibold ${team.returnPct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {team.returnPct >= 0 ? '+' : ''}{team.returnPct.toFixed(2)}%
+                            </span>
+                          </td>
+                          <td className="p-4 text-right font-mono">{team.pitchTotal}</td>
+                          <td className="p-4 text-right font-mono">{team.emotionTotal}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="allocations">
@@ -173,93 +334,62 @@ export default function Dashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {teamsWithReturns.map((team) => (
-                        <tr key={team.id} className="border-t hover-elevate" data-testid={`row-allocation-${team.id}`}>
-                          <td className="p-4 font-semibold">{team.name}</td>
-                          <td className="p-4 text-right">
-                            <span className="font-mono font-semibold text-[#2563EB]">{team.latestAllocation.equity}%</span>
-                          </td>
-                          <td className="p-4 text-right">
-                            <span className="font-mono font-semibold text-[#DC2626]">{team.latestAllocation.debt}%</span>
-                          </td>
-                          <td className="p-4 text-right">
-                            <span className="font-mono font-semibold text-[#F97316]">{team.latestAllocation.gold}%</span>
-                          </td>
-                          <td className="p-4 text-right">
-                            <span className="font-mono font-semibold text-[#16A34A]">{team.latestAllocation.cash}%</span>
-                          </td>
-                        </tr>
-                      ))}
+                      {teams.map((team) => {
+                        const latestAlloc = getLatestAllocation(team.id);
+                        return (
+                          <tr key={team.id} className="border-t hover-elevate" data-testid={`row-allocation-${team.id}`}>
+                            <td className="p-4 font-semibold">{team.name}</td>
+                            <td className="p-4 text-right">
+                              <span className="font-mono font-semibold text-[#2563EB]">
+                                {latestAlloc ? latestAlloc.equity : 0}%
+                              </span>
+                            </td>
+                            <td className="p-4 text-right">
+                              <span className="font-mono font-semibold text-[#DC2626]">
+                                {latestAlloc ? latestAlloc.debt : 0}%
+                              </span>
+                            </td>
+                            <td className="p-4 text-right">
+                              <span className="font-mono font-semibold text-[#F97316]">
+                                {latestAlloc ? latestAlloc.gold : 0}%
+                              </span>
+                            </td>
+                            <td className="p-4 text-right">
+                              <span className="font-mono font-semibold text-[#16A34A]">
+                                {latestAlloc ? latestAlloc.cash : 0}%
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               </div>
             </TabsContent>
-
-            <TabsContent value="history">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PieChart className="w-5 h-5" />
-                    Historical Allocations
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {teamsWithReturns.map((team) => (
-                      <div key={team.id} className="space-y-3">
-                        <h4 className="font-semibold text-lg">{team.name}</h4>
-                        <div className="rounded-md border border-border overflow-hidden">
-                          <table className="w-full text-sm">
-                            <thead className="bg-muted/50">
-                              <tr>
-                                <th className="text-left p-3 font-medium">Round</th>
-                                <th className="text-right p-3 font-medium">Equity</th>
-                                <th className="text-right p-3 font-medium">Debt</th>
-                                <th className="text-right p-3 font-medium">Gold</th>
-                                <th className="text-right p-3 font-medium">Cash</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr className="border-t">
-                                <td className="p-3">Round 1</td>
-                                <td className="p-3 text-right font-mono">25%</td>
-                                <td className="p-3 text-right font-mono">25%</td>
-                                <td className="p-3 text-right font-mono">25%</td>
-                                <td className="p-3 text-right font-mono">25%</td>
-                              </tr>
-                              <tr className="border-t">
-                                <td className="p-3">Round 2</td>
-                                <td className="p-3 text-right font-mono">35%</td>
-                                <td className="p-3 text-right font-mono">30%</td>
-                                <td className="p-3 text-right font-mono">20%</td>
-                                <td className="p-3 text-right font-mono">15%</td>
-                              </tr>
-                              <tr className="border-t bg-muted/30">
-                                <td className="p-3 font-semibold">Round 3 (Current)</td>
-                                <td className="p-3 text-right font-mono font-semibold">{team.latestAllocation.equity}%</td>
-                                <td className="p-3 text-right font-mono font-semibold">{team.latestAllocation.debt}%</td>
-                                <td className="p-3 text-right font-mono font-semibold">{team.latestAllocation.gold}%</td>
-                                <td className="p-3 text-right font-mono font-semibold">{team.latestAllocation.cash}%</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
         </div>
       </main>
 
-      <ResetGameModal
-        open={resetModalOpen}
-        onOpenChange={setResetModalOpen}
-        onConfirm={handleResetGame}
-      />
+      <AlertDialog open={resetModalOpen} onOpenChange={setResetModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Game?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will clear all rounds, allocations, and reset team scores. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-reset">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => resetGameMutation.mutate()}
+              data-testid="button-confirm-reset"
+            >
+              Reset Game
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

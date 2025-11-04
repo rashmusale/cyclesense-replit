@@ -451,6 +451,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reset game
+  app.post("/api/game/reset", async (req, res) => {
+    try {
+      // Clear all allocations
+      const allocations = await storage.getAllAllocations();
+      for (const alloc of allocations) {
+        await storage.deleteTeamAllocation(alloc.id.toString());
+      }
+
+      // Clear all rounds
+      const rounds = await storage.getAllRounds();
+      for (const round of rounds) {
+        await storage.deleteRound(round.id.toString());
+      }
+
+      // Reset all teams to initial state
+      const teams = await storage.getAllTeams();
+      for (const team of teams) {
+        await storage.updateTeam(team.id, {
+          currentNav: "10.00",
+          pitchTotal: 0,
+          emotionTotal: 0
+        });
+      }
+
+      // Reset game state
+      const gameState = await storage.getGameState();
+      if (gameState) {
+        await storage.updateGameState(gameState.id, {
+          currentRound: 0,
+          isActive: true
+        });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to reset game" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

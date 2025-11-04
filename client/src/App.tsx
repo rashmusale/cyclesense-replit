@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import GameSetup from "@/pages/GameSetup";
 import ConfigureTeams from "@/pages/ConfigureTeams";
 import StartRound from "@/pages/StartRound";
+import TeamInput from "@/pages/TeamInput";
 import RoundSummary from "@/pages/RoundSummary";
 import NotFound from "@/pages/not-found";
 
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/game-setup" component={GameSetup} />
       <Route path="/configure-teams" component={ConfigureTeams} />
       <Route path="/start-round" component={StartRound} />
+      <Route path="/team-input" component={TeamInput} />
       <Route path="/round-summary" component={RoundSummary} />
       <Route component={NotFound} />
     </Switch>
