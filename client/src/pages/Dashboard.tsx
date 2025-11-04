@@ -43,11 +43,6 @@ export default function Dashboard() {
     queryKey: ["/api/rounds"],
   });
 
-  // Debug logging
-  console.log('Dashboard allAllocations:', allAllocations);
-  console.log('Dashboard rounds:', rounds);
-  console.log('Dashboard teams:', teams);
-
   const resetGameMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/game/reset", {});
