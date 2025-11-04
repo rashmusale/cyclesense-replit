@@ -10,9 +10,13 @@ import {
   type Round,
   type InsertRound,
   type TeamAllocation,
-  type InsertTeamAllocation
+  type InsertTeamAllocation,
+  colorCards,
+  blackCards
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Game State
@@ -63,16 +67,12 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private gameStates: Map<string, GameState>;
   private teams: Map<string, Team>;
-  private colorCards: Map<string, ColorCard>;
-  private blackCards: Map<string, BlackCard>;
   private rounds: Map<string, Round>;
   private teamAllocations: Map<string, TeamAllocation>;
 
   constructor() {
     this.gameStates = new Map();
     this.teams = new Map();
-    this.colorCards = new Map();
-    this.blackCards = new Map();
     this.rounds = new Map();
     this.teamAllocations = new Map();
   }
@@ -148,74 +148,56 @@ export class MemStorage implements IStorage {
     this.teams.clear();
   }
 
-  // Color Cards
+  // Color Cards - DATABASE BACKED
   async getAllColorCards(): Promise<ColorCard[]> {
-    return Array.from(this.colorCards.values());
+    return await db.select().from(colorCards);
   }
 
   async getColorCardsByPhase(phase: string): Promise<ColorCard[]> {
-    return Array.from(this.colorCards.values()).filter(card => card.phase === phase);
+    return await db.select().from(colorCards).where(eq(colorCards.phase, phase));
   }
 
   async getColorCard(id: string): Promise<ColorCard | undefined> {
-    return this.colorCards.get(id);
+    const results = await db.select().from(colorCards).where(eq(colorCards.id, id));
+    return results[0];
   }
 
   async createColorCard(insertCard: InsertColorCard): Promise<ColorCard> {
-    const id = randomUUID();
-    const card: ColorCard = { 
-      ...insertCard, 
-      id,
-      imageUrl: insertCard.imageUrl ?? null
-    };
-    this.colorCards.set(id, card);
+    const [card] = await db.insert(colorCards).values(insertCard).returning();
     return card;
   }
 
   async deleteAllColorCards(): Promise<void> {
-    this.colorCards.clear();
+    await db.delete(colorCards);
   }
 
   async bulkCreateColorCards(cards: InsertColorCard[]): Promise<ColorCard[]> {
-    const created: ColorCard[] = [];
-    for (const insertCard of cards) {
-      const card = await this.createColorCard(insertCard);
-      created.push(card);
-    }
-    return created;
+    if (cards.length === 0) return [];
+    return await db.insert(colorCards).values(cards).returning();
   }
 
-  // Black Cards
+  // Black Cards - DATABASE BACKED
   async getAllBlackCards(): Promise<BlackCard[]> {
-    return Array.from(this.blackCards.values());
+    return await db.select().from(blackCards);
   }
 
   async getBlackCard(id: string): Promise<BlackCard | undefined> {
-    return this.blackCards.get(id);
+    const results = await db.select().from(blackCards).where(eq(blackCards.id, id));
+    return results[0];
   }
 
   async createBlackCard(insertCard: InsertBlackCard): Promise<BlackCard> {
-    const id = randomUUID();
-    const card: BlackCard = { 
-      ...insertCard, 
-      id,
-      imageUrl: insertCard.imageUrl ?? null
-    };
-    this.blackCards.set(id, card);
+    const [card] = await db.insert(blackCards).values(insertCard).returning();
     return card;
   }
 
   async deleteAllBlackCards(): Promise<void> {
-    this.blackCards.clear();
+    await db.delete(blackCards);
   }
 
   async bulkCreateBlackCards(cards: InsertBlackCard[]): Promise<BlackCard[]> {
-    const created: BlackCard[] = [];
-    for (const insertCard of cards) {
-      const card = await this.createBlackCard(insertCard);
-      created.push(card);
-    }
-    return created;
+    if (cards.length === 0) return [];
+    return await db.insert(blackCards).values(cards).returning();
   }
 
   // Rounds

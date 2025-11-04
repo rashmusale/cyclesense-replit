@@ -64,8 +64,10 @@ Preferred communication style: Simple, everyday language.
 
 **Data Storage Strategy**:
 - Abstract storage interface (`IStorage`) allowing swappable implementations
-- Currently uses in-memory storage (data resets on server restart)
-- Schema defined with Drizzle ORM for future PostgreSQL migration
+- **Hybrid storage model**: PostgreSQL for persistent card data, in-memory for ephemeral game sessions
+- **Cards (persistent)**: Color cards and black cards stored in PostgreSQL database - survive server restarts
+- **Game sessions (ephemeral)**: Game state, teams, rounds, and allocations stored in-memory - reset on server restart
+- Schema defined with Drizzle ORM
 - UUID-based primary keys for all entities
 
 ### Database Schema
@@ -153,12 +155,47 @@ Preferred communication style: Simple, everyday language.
 - **@replit/vite-plugin-cartographer**: Code navigation assistance
 - **@replit/vite-plugin-dev-banner**: Development environment indicator
 
-### Future Database Integration
-The application is architected to use PostgreSQL via Neon serverless database, but currently operates with in-memory storage. The database connection will be established via the `DATABASE_URL` environment variable once provisioned. All schema definitions are ready for migration using Drizzle Kit.
+### Database Integration
+The application uses PostgreSQL via Neon serverless database for persistent card storage:
+- **Database Connection**: Configured via `DATABASE_URL` environment variable
+- **WebSocket Support**: Configured for Replit environment using `ws` package
+- **Persistent Storage**: Color cards and black cards survive server restarts
+- **Schema Management**: Drizzle ORM with `npm run db:push` for schema migrations
+- **Sample Data**: Automatically initializes 12 color cards (G1-G3, B1-B3, O1-O3, R1-R3) and 6 black cards on first run
 
 ## Recent Changes
 
-### November 4, 2025 - Virtual Mode Workflow & Critical Bug Fixes
+### November 4, 2025 - Database Integration & Card Management
+
+**PostgreSQL Database Integration:**
+- Migrated card storage from in-memory to PostgreSQL database
+- Color cards and black cards now persist across server restarts and sessions
+- Game state, teams, rounds, and allocations remain in-memory (session-based)
+- Configured Neon serverless with WebSocket support for Replit environment
+- Database schema pushed using Drizzle Kit (`npm run db:push`)
+
+**Card Management System:**
+- Two-tab interface for managing Color Cards and Black Cards separately
+- Excel import functionality for both card types:
+  - **Color Cards**: 6 columns (Card Number, Card Text, Equity Return, Debt Return, Gold Return, Cash Return)
+  - **Black Cards**: 6 columns (Card Number, Card Text, Equity Modifier, Debt Modifier, Gold Modifier, Cash Modifier)
+- Auto-header detection skips header rows automatically
+- Phase auto-detection from card number prefix (G=Green, B=Blue, O=Orange, R=Red)
+- Bulk import with preview and validation
+- Delete all cards functionality for deck replacement
+- Both tab-separated (Excel) and comma-separated formats supported
+
+**New API Endpoints:**
+- `POST /api/color-cards/bulk` - Bulk import color cards
+- `DELETE /api/color-cards` - Delete all color cards
+- `POST /api/black-cards/bulk` - Bulk import black cards
+- `DELETE /api/black-cards` - Delete all black cards
+
+**UI Improvements:**
+- Removed unnecessary "No active game" text from Dashboard welcome screen
+- Cleaner initial landing page with just action buttons
+
+### November 4, 2025 (Earlier) - Virtual Mode Workflow & Critical Bug Fixes
 
 **Virtual Mode Workflow Refactored:**
 - Separated dice roll from card draw into distinct steps
