@@ -188,14 +188,46 @@ export default function RoundSummary() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <div className={`text-sm mb-1 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].textMuted}`}>Card Number</div>
-                <div className={`font-mono font-semibold ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].text}`}>{colorCard.cardNumber}</div>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <div className={`text-sm mb-1 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].textMuted}`}>Card Number</div>
+                  <div className={`font-mono font-semibold ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].text}`}>{colorCard.cardNumber}</div>
+                </div>
+                <div>
+                  <div className={`text-sm mb-1 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].textMuted}`}>Market Event</div>
+                  <div className={`text-base ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].text}`}>{colorCard.cardText}</div>
+                </div>
               </div>
-              <div>
-                <div className={`text-sm mb-1 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].textMuted}`}>Market Event</div>
-                <div className={`text-base ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].text}`}>{colorCard.cardText}</div>
+              
+              <div className="border-t border-white/20 pt-4">
+                <div className={`text-sm font-medium mb-3 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].text}`}>Asset Returns</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                    <span className="text-xs font-medium text-white/90 mb-1">Equity</span>
+                    <span className="font-mono font-bold text-lg text-white">
+                      {Number(colorCard.equityReturn) > 0 ? "+" : ""}{colorCard.equityReturn}%
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                    <span className="text-xs font-medium text-white/90 mb-1">Debt</span>
+                    <span className="font-mono font-bold text-lg text-white">
+                      {Number(colorCard.debtReturn) > 0 ? "+" : ""}{colorCard.debtReturn}%
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                    <span className="text-xs font-medium text-white/90 mb-1">Gold</span>
+                    <span className="font-mono font-bold text-lg text-white">
+                      {Number(colorCard.goldReturn) > 0 ? "+" : ""}{colorCard.goldReturn}%
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                    <span className="text-xs font-medium text-white/90 mb-1">Cash</span>
+                    <span className="font-mono font-bold text-lg text-white">
+                      {Number(colorCard.cashReturn) > 0 ? "+" : ""}{colorCard.cashReturn}%
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -235,46 +267,6 @@ export default function RoundSummary() {
                     </div>
                   );
                 })}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Asset Returns Reveal */}
-        {(
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Eye className="w-5 h-5" />
-                <CardTitle>Card Impact (Asset Returns)</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex flex-col items-center justify-center p-4 rounded bg-[#2563EB]/10">
-                  <span className="text-sm font-medium text-[#2563EB] mb-1">Equity</span>
-                  <span className="font-mono font-bold text-2xl text-[#2563EB]">
-                    {Number(colorCard.equityReturn) > 0 ? "+" : ""}{colorCard.equityReturn}%
-                  </span>
-                </div>
-                <div className="flex flex-col items-center justify-center p-4 rounded bg-[#DC2626]/10">
-                  <span className="text-sm font-medium text-[#DC2626] mb-1">Debt</span>
-                  <span className="font-mono font-bold text-2xl text-[#DC2626]">
-                    {Number(colorCard.debtReturn) > 0 ? "+" : ""}{colorCard.debtReturn}%
-                  </span>
-                </div>
-                <div className="flex flex-col items-center justify-center p-4 rounded bg-[#F97316]/10">
-                  <span className="text-sm font-medium text-[#F97316] mb-1">Gold</span>
-                  <span className="font-mono font-bold text-2xl text-[#F97316]">
-                    {Number(colorCard.goldReturn) > 0 ? "+" : ""}{colorCard.goldReturn}%
-                  </span>
-                </div>
-                <div className="flex flex-col items-center justify-center p-4 rounded bg-[#16A34A]/10">
-                  <span className="text-sm font-medium text-[#16A34A] mb-1">Cash</span>
-                  <span className="font-mono font-bold text-2xl text-[#16A34A]">
-                    {Number(colorCard.cashReturn) > 0 ? "+" : ""}{colorCard.cashReturn}%
-                  </span>
-                </div>
               </div>
             </CardContent>
           </Card>

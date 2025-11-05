@@ -224,14 +224,46 @@ export default function StartRound() {
                     <CardTitle className={PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}>Color Card Drawn</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className={`text-sm mb-1 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].textMuted}`}>Card Number</div>
-                        <div className={`font-mono font-semibold ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`} data-testid="text-card-number">{drawnCard.cardNumber}</div>
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <div>
+                          <div className={`text-sm mb-1 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].textMuted}`}>Card Number</div>
+                          <div className={`font-mono font-semibold ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`} data-testid="text-card-number">{drawnCard.cardNumber}</div>
+                        </div>
+                        <div>
+                          <div className={`text-sm mb-1 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].textMuted}`}>Market Event</div>
+                          <div className={`text-base ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`} data-testid="text-card-text">{drawnCard.cardText}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className={`text-sm mb-1 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].textMuted}`}>Market Event</div>
-                        <div className={`text-base ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`} data-testid="text-card-text">{drawnCard.cardText}</div>
+                      
+                      <div className="border-t border-white/20 pt-4">
+                        <div className={`text-sm font-medium mb-3 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`}>Asset Returns</div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                            <span className="text-xs font-medium text-white/90 mb-1">Equity</span>
+                            <span className="font-mono font-bold text-lg text-white">
+                              {Number(drawnCard.equityReturn) > 0 ? "+" : ""}{drawnCard.equityReturn}%
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                            <span className="text-xs font-medium text-white/90 mb-1">Debt</span>
+                            <span className="font-mono font-bold text-lg text-white">
+                              {Number(drawnCard.debtReturn) > 0 ? "+" : ""}{drawnCard.debtReturn}%
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                            <span className="text-xs font-medium text-white/90 mb-1">Gold</span>
+                            <span className="font-mono font-bold text-lg text-white">
+                              {Number(drawnCard.goldReturn) > 0 ? "+" : ""}{drawnCard.goldReturn}%
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                            <span className="text-xs font-medium text-white/90 mb-1">Cash</span>
+                            <span className="font-mono font-bold text-lg text-white">
+                              {Number(drawnCard.cashReturn) > 0 ? "+" : ""}{drawnCard.cashReturn}%
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -338,14 +370,46 @@ export default function StartRound() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className={`text-sm mb-1 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].textMuted}`}>Card Number</div>
-                        <div className={`font-mono font-semibold ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`} data-testid="text-card-number">{drawnCard.cardNumber}</div>
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <div>
+                          <div className={`text-sm mb-1 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].textMuted}`}>Card Number</div>
+                          <div className={`font-mono font-semibold ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`} data-testid="text-card-number">{drawnCard.cardNumber}</div>
+                        </div>
+                        <div>
+                          <div className={`text-sm mb-1 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].textMuted}`}>Market Event</div>
+                          <div className={`text-base ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`} data-testid="text-card-text">{drawnCard.cardText}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className={`text-sm mb-1 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].textMuted}`}>Market Event</div>
-                        <div className={`text-base ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`} data-testid="text-card-text">{drawnCard.cardText}</div>
+                      
+                      <div className="border-t border-white/20 pt-4">
+                        <div className={`text-sm font-medium mb-3 ${PHASE_COLORS[drawnCard.phase as keyof typeof PHASE_COLORS].text}`}>Asset Returns</div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                            <span className="text-xs font-medium text-white/90 mb-1">Equity</span>
+                            <span className="font-mono font-bold text-lg text-white">
+                              {Number(drawnCard.equityReturn) > 0 ? "+" : ""}{drawnCard.equityReturn}%
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                            <span className="text-xs font-medium text-white/90 mb-1">Debt</span>
+                            <span className="font-mono font-bold text-lg text-white">
+                              {Number(drawnCard.debtReturn) > 0 ? "+" : ""}{drawnCard.debtReturn}%
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                            <span className="text-xs font-medium text-white/90 mb-1">Gold</span>
+                            <span className="font-mono font-bold text-lg text-white">
+                              {Number(drawnCard.goldReturn) > 0 ? "+" : ""}{drawnCard.goldReturn}%
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                            <span className="text-xs font-medium text-white/90 mb-1">Cash</span>
+                            <span className="font-mono font-bold text-lg text-white">
+                              {Number(drawnCard.cashReturn) > 0 ? "+" : ""}{drawnCard.cashReturn}%
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
