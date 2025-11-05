@@ -116,7 +116,7 @@ export default function GameSetup() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Game Setup</h1>
           <p className="text-muted-foreground">
-            Configure your CycleSense investment simulation session
+            Select the game mode and configure your teams
           </p>
         </div>
 
