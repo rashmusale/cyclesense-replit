@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PhaseBadge from "@/components/PhaseBadge";
 import { Dices } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +26,7 @@ export default function StartRound() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedPhase, setSelectedPhase] = useState<string>("");
+  const [selectedCardNumber, setSelectedCardNumber] = useState<string>("");
   const [drawnCard, setDrawnCard] = useState<ColorCard | null>(null);
   const [virtualStep, setVirtualStep] = useState<VirtualStep>("roll-dice");
 
@@ -32,8 +34,17 @@ export default function StartRound() {
     queryKey: ["/api/game-state"],
   });
 
+  const { data: colorCards = [] } = useQuery<ColorCard[]>({
+    queryKey: ["/api/color-cards"],
+  });
+
   const isVirtualMode = gameState?.mode === "virtual";
   const nextRoundNumber = (gameState?.currentRound || 0) + 1;
+  
+  // Filter color cards by selected phase for In-Person mode
+  const phaseColorCards = selectedPhase 
+    ? colorCards.filter(card => card.phase === selectedPhase)
+    : [];
 
   // Virtual mode: Roll dice only (determine phase)
   const rollDiceMutation = useMutation({
@@ -61,42 +72,25 @@ export default function StartRound() {
     }
   });
 
-  // In-Person mode: Draw card with selected phase
-  const drawCardMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/rounds/draw-card", {
-        phase: selectedPhase,
-        isVirtual: false
-      });
-      return await res.json();
-    },
-    onSuccess: (data: { phase: string; card: ColorCard }) => {
-      setSelectedPhase(data.phase);
-      setDrawnCard(data.card);
+  // In-Person mode: Select specific card by card number
+  const handleInPersonCardSelect = () => {
+    if (!selectedCardNumber) {
       toast({
-        title: "Card Drawn!",
-        description: "Color card selected",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to draw card",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const handleInPersonDrawCard = () => {
-    if (!selectedPhase) {
-      toast({
-        title: "Select a Phase",
-        description: "Please select a market phase first",
+        title: "Select a Card",
+        description: "Please select a color card number",
         variant: "destructive",
       });
       return;
     }
-    drawCardMutation.mutate();
+    
+    const selectedCard = phaseColorCards.find(c => c.cardNumber === selectedCardNumber);
+    if (selectedCard) {
+      setDrawnCard(selectedCard);
+      toast({
+        title: "Card Selected!",
+        description: "Color card selected",
+      });
+    }
   };
 
   const handleVirtualContinue = () => {
@@ -246,28 +240,60 @@ export default function StartRound() {
             {!drawnCard && (
               <Card className="mb-6">
                 <CardHeader>
-                  <CardTitle>Select Phase</CardTitle>
+                  <CardTitle>Select Phase & Card</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <RadioGroup value={selectedPhase} onValueChange={setSelectedPhase} className="mb-6">
-                    {PHASES.map(phase => (
-                      <div key={phase.value} className="flex items-center space-x-2 mb-2">
-                        <RadioGroupItem value={phase.value} id={phase.value} data-testid={`radio-phase-${phase.value}`} />
-                        <Label htmlFor={phase.value} className="cursor-pointer">
-                          <PhaseBadge phase={phase.value.toUpperCase() as any} />
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+                <CardContent className="space-y-6">
+                  <div>
+                    <label className="text-sm font-medium mb-3 block">Market Phase</label>
+                    <RadioGroup value={selectedPhase} onValueChange={(value) => {
+                      setSelectedPhase(value);
+                      setSelectedCardNumber(""); // Reset card selection when phase changes
+                    }}>
+                      {PHASES.map(phase => (
+                        <div key={phase.value} className="flex items-center space-x-2 mb-2">
+                          <RadioGroupItem value={phase.value} id={phase.value} data-testid={`radio-phase-${phase.value}`} />
+                          <Label htmlFor={phase.value} className="cursor-pointer">
+                            <PhaseBadge phase={phase.value.toUpperCase() as any} />
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  {selectedPhase && (
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Color Card Number</label>
+                      <Select value={selectedCardNumber} onValueChange={setSelectedCardNumber}>
+                        <SelectTrigger data-testid="select-color-card-number">
+                          <SelectValue placeholder="Select card number" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {phaseColorCards.map(card => (
+                            <SelectItem key={card.id} value={card.cardNumber}>
+                              {card.cardNumber}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedCardNumber && (
+                        <div className="mt-4 p-3 rounded-lg bg-muted">
+                          <div className="text-sm text-muted-foreground mb-1">Card Text</div>
+                          <div className="text-sm">
+                            {phaseColorCards.find(c => c.cardNumber === selectedCardNumber)?.cardText}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   <Button 
-                    onClick={handleInPersonDrawCard} 
-                    disabled={drawCardMutation.isPending || !selectedPhase}
+                    onClick={handleInPersonCardSelect} 
+                    disabled={!selectedCardNumber}
                     className="w-full" 
                     size="lg" 
-                    data-testid="button-draw-card"
+                    data-testid="button-select-card"
                   >
-                    {drawCardMutation.isPending ? "Drawing..." : "Draw Card"}
+                    Select Card
                   </Button>
                 </CardContent>
               </Card>
@@ -278,7 +304,7 @@ export default function StartRound() {
                 <Card className="mb-6">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle>Color Card Drawn</CardTitle>
+                      <CardTitle>Color Card Selected</CardTitle>
                       <PhaseBadge phase={drawnCard.phase.toUpperCase() as any} />
                     </div>
                   </CardHeader>
@@ -297,8 +323,16 @@ export default function StartRound() {
                 </Card>
 
                 <div className="flex gap-4">
-                  <Button variant="outline" onClick={() => setDrawnCard(null)} className="flex-1" data-testid="button-redraw">
-                    Draw Different Card
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setDrawnCard(null);
+                      setSelectedCardNumber("");
+                    }} 
+                    className="flex-1" 
+                    data-testid="button-redraw"
+                  >
+                    Select Different Card
                   </Button>
                   <Button 
                     onClick={() => createRoundMutation.mutate()} 

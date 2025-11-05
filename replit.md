@@ -114,6 +114,16 @@ queryClient.resetQueries({ queryKey: ["/api/allocations"] });
 - Click "End Game" → Confirm → CSV downloads → Queries reset → Welcome screen instantly displays
 - Clean transition from Leaderboard to "Welcome to CycleSense" screen with "New Game" and "Manage Cards" buttons
 
+### November 5, 2025 (Later) - In-Person Mode Color Card Dropdown
+
+**In-Person Mode Color Card Selection:**
+- Changed from random "Draw Card" button to dropdown selection (like black cards)
+- Workflow: Select phase → Select card number from dropdown → Card text appears → Click "Select Card"
+- Dropdown filtered by selected phase
+- Card text previews below dropdown before confirming selection
+- "Select Different Card" button allows changing selection
+- Consistent UX with black card selection
+
 ### November 5, 2025 (Earlier) - Card Display & Black Card Draw Improvements
 
 **Card Display Simplification:**
