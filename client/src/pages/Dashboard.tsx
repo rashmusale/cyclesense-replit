@@ -24,7 +24,6 @@ import {
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [resetModalOpen, setResetModalOpen] = useState(false);
   const [endGameModalOpen, setEndGameModalOpen] = useState(false);
 
   const { data: gameState } = useQuery<GameState>({
@@ -54,10 +53,9 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/rounds"] });
       queryClient.invalidateQueries({ queryKey: ["/api/allocations"] });
       toast({
-        title: "Game Reset",
-        description: "All game data has been cleared. Redirecting to home...",
+        title: "Game Ended",
+        description: "Game data exported and cleared. Redirecting to home...",
       });
-      setResetModalOpen(false);
       setEndGameModalOpen(false);
       setLocation("/");
     },
@@ -120,10 +118,65 @@ export default function Dashboard() {
   const chartData = navProgressionData();
 
   const handleExport = () => {
-    toast({
-      title: "Export Started",
-      description: "Downloading game data as CSV...",
+    // Build CSV content
+    const rows: string[] = [];
+    
+    // Header
+    rows.push("Round,Team,Equity %,Debt %,Gold %,Cash %,Pitch Score,Emotion Score,NAV Before,NAV After");
+    
+    // Create a map from roundId to roundNumber
+    const roundIdToNumber = new Map<string, number>();
+    rounds.forEach(round => {
+      roundIdToNumber.set(round.id, round.roundNumber);
     });
+    
+    // Sort allocations by round number then team name
+    const sortedAllocations = [...allAllocations].sort((a, b) => {
+      const roundNumA = roundIdToNumber.get(a.roundId) || 0;
+      const roundNumB = roundIdToNumber.get(b.roundId) || 0;
+      if (roundNumA !== roundNumB) {
+        return roundNumA - roundNumB;
+      }
+      const teamA = teams.find(t => t.id === a.teamId);
+      const teamB = teams.find(t => t.id === b.teamId);
+      return (teamA?.name || '').localeCompare(teamB?.name || '');
+    });
+    
+    // Add data rows
+    sortedAllocations.forEach(alloc => {
+      const team = teams.find(t => t.id === alloc.teamId);
+      const roundNumber = roundIdToNumber.get(alloc.roundId) || 0;
+      rows.push(
+        `${roundNumber},${team?.name || 'Unknown'},${alloc.equity},${alloc.debt},${alloc.gold},${alloc.cash},${alloc.pitchScore},${alloc.emotionScore},${alloc.navBefore},${alloc.navAfter}`
+      );
+    });
+    
+    // Create blob and download
+    const csv = rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `cyclesense-game-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export Complete",
+      description: "Game data downloaded as CSV.",
+    });
+  };
+
+  const handleEndGame = () => {
+    // Export CSV first
+    handleExport();
+    
+    // Then reset game after a brief delay to ensure export completes
+    setTimeout(() => {
+      resetGameMutation.mutate();
+    }, 500);
   };
 
   const getLatestAllocation = (teamId: string) => {
@@ -204,13 +257,6 @@ export default function Dashboard() {
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setResetModalOpen(true)}
-                data-testid="button-reset-game"
-              >
-                Reset Game
               </Button>
               <Button 
                 variant="destructive" 
@@ -466,41 +512,21 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <AlertDialog open={resetModalOpen} onOpenChange={setResetModalOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reset Game?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will clear all rounds, allocations, and reset team scores. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-reset">Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => resetGameMutation.mutate()}
-              data-testid="button-confirm-reset"
-            >
-              Reset Game
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <AlertDialog open={endGameModalOpen} onOpenChange={setEndGameModalOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>End Game?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will end the current game and reset all data including rounds, allocations, and team scores. This action cannot be undone.
+              This will download the game data as CSV, then reset all data including rounds, allocations, and team scores. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel data-testid="button-cancel-end-game">Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={() => resetGameMutation.mutate()}
+              onClick={handleEndGame}
               data-testid="button-confirm-end-game"
             >
-              End Game
+              End Game & Download
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
