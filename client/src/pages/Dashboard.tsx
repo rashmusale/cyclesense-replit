@@ -203,11 +203,9 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center max-w-2xl">
-          <div className="flex justify-center mb-8">
-            <img src={logoUrl} alt="CycleSense Logo" className="w-48 h-48" />
+          <div className="flex justify-center mb-12">
+            <img src={logoUrl} alt="CycleSense" className="w-96 h-96" />
           </div>
-          <h1 className="text-6xl font-bold mb-4">CycleSense</h1>
-          <p className="text-2xl text-muted-foreground mb-12">Read. React. Rebalance.</p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
