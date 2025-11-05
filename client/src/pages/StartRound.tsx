@@ -14,10 +14,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ColorCard, GameState } from "@shared/schema";
 
 const PHASES = [
-  { value: "green", label: "Green" },
-  { value: "blue", label: "Blue" },
-  { value: "orange", label: "Orange" },
-  { value: "red", label: "Red" },
+  { value: "green", label: "Green - Bull Market" },
+  { value: "blue", label: "Blue - Stable Market" },
+  { value: "orange", label: "Orange - Market Correction" },
+  { value: "red", label: "Red - Bear Market" },
 ];
 
 const PHASE_COLORS = {
@@ -305,9 +305,9 @@ export default function StartRound() {
                         </SelectContent>
                       </Select>
                       {selectedCardNumber && (
-                        <div className={`mt-4 p-4 rounded-lg ${PHASE_COLORS[selectedPhase as keyof typeof PHASE_COLORS].bg} border-2 ${PHASE_COLORS[selectedPhase as keyof typeof PHASE_COLORS].border}`}>
-                          <div className={`text-sm mb-2 ${PHASE_COLORS[selectedPhase as keyof typeof PHASE_COLORS].textMuted}`}>Card Text</div>
-                          <div className={`text-sm ${PHASE_COLORS[selectedPhase as keyof typeof PHASE_COLORS].text}`}>
+                        <div className="mt-4 p-3 rounded-lg bg-muted">
+                          <div className="text-sm text-muted-foreground mb-1">Card Text</div>
+                          <div className="text-sm">
                             {phaseColorCards.find(c => c.cardNumber === selectedCardNumber)?.cardText}
                           </div>
                         </div>

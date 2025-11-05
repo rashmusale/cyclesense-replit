@@ -110,24 +110,7 @@ Final NAV = NAV After Color Card × (1 + Total Modifier ÷ 100)
 
 ## Recent Changes
 
-### November 5, 2025 (Latest) - Round Results Screen Reorganization
-
-**Screen Layout Updates:**
-- Round Results screen now shows sections in logical order:
-  1. **Team NAV Results** - Top priority, shows final NAV for all teams
-  2. **Card Details** - Color card and black card (if applied) displayed one below the other, with asset returns/modifiers embedded within each card section
-- Card impacts now shown as inline boxes within their respective card sections (not separate sections)
-- Black card details and impact now appear in the results section when applied
-- Clearer separation between card information and interactive black card selection flow
-
-**Implementation Details:**
-- Applied black card fetched via separate query when `round.blackCardId` exists
-- Color Card section includes card details and asset returns in white boxes on colored background
-- Black Card section includes card details and modifiers in purple boxes on black background
-- Phase badge text changed to white for better visibility on colored backgrounds
-- Asset returns and modifiers displayed in 4-column grid (Equity, Debt, Gold, Cash)
-
-### November 5, 2025 - Dramatic Animations & Phase-Specific Styling
+### November 5, 2025 (Latest) - Dramatic Animations & Phase-Specific Styling
 
 **Visual Enhancements:**
 - Phase-specific background colors for color card sections with white text for maximum drama:
