@@ -4,11 +4,11 @@ import Header from "@/components/Header";
 import PhaseBadge from "@/components/PhaseBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, AlertCircle } from "lucide-react";
+import { Eye, AlertCircle, Shuffle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Round, ColorCard, BlackCard, Team, TeamAllocation } from "@shared/schema";
+import type { Round, ColorCard, BlackCard, Team, TeamAllocation, GameState } from "@shared/schema";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +19,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function RoundSummary() {
   const [, setLocation] = useLocation();
@@ -29,6 +36,11 @@ export default function RoundSummary() {
 
   const [blackCardDialogOpen, setBlackCardDialogOpen] = useState(false);
   const [selectedBlackCard, setSelectedBlackCard] = useState<BlackCard | null>(null);
+  const [selectedBlackCardNumber, setSelectedBlackCardNumber] = useState<string>("");
+
+  const { data: gameState } = useQuery<GameState>({
+    queryKey: ["/api/game-state"],
+  });
 
   const { data: round } = useQuery<Round>({
     queryKey: ["/api/rounds", roundId],
@@ -51,6 +63,8 @@ export default function RoundSummary() {
   const { data: blackCards = [] } = useQuery<BlackCard[]>({
     queryKey: ["/api/black-cards"],
   });
+
+  const isVirtualMode = gameState?.mode === "virtual";
 
   // Get this round's allocations
   const roundAllocations = allocations.filter(a => a.roundId === roundId);
@@ -99,6 +113,27 @@ export default function RoundSummary() {
     // Save allocations NOW before mutation starts
     const savedAllocations = allocations.filter(a => a.roundId === roundId);
     applyBlackCardMutation.mutate({ blackCardId: card.id, savedAllocations });
+  };
+
+  const handleRandomBlackCard = () => {
+    if (blackCards.length === 0) {
+      toast({
+        title: "No Black Cards",
+        description: "Please add black cards to the deck first",
+        variant: "destructive",
+      });
+      return;
+    }
+    const randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
+    handleBlackCardReveal(randomCard);
+  };
+
+  const handleInPersonBlackCardSelect = () => {
+    const card = blackCards.find(c => c.cardNumber === selectedBlackCardNumber);
+    if (card) {
+      handleBlackCardReveal(card);
+      setBlackCardDialogOpen(false);
+    }
   };
 
   if (!round || !colorCard) {
@@ -235,12 +270,21 @@ export default function RoundSummary() {
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg mb-2">Black Card Decision</h3>
                   <p className="text-muted-foreground mb-4">
-                    Would you like to reveal a black card for additional market effects?
+                    {isVirtualMode 
+                      ? "Draw a random black card for additional market effects?" 
+                      : "Would you like to select a black card for additional market effects?"}
                   </p>
                   <div className="flex gap-3">
-                    <Button onClick={() => setBlackCardDialogOpen(true)} data-testid="button-reveal-black-card">
-                      Reveal Black Card
-                    </Button>
+                    {isVirtualMode ? (
+                      <Button onClick={handleRandomBlackCard} disabled={applyBlackCardMutation.isPending} data-testid="button-draw-random-black-card">
+                        <Shuffle className="w-4 h-4 mr-2" />
+                        {applyBlackCardMutation.isPending ? "Drawing..." : "Draw Random Black Card"}
+                      </Button>
+                    ) : (
+                      <Button onClick={() => setBlackCardDialogOpen(true)} data-testid="button-reveal-black-card">
+                        Select Black Card
+                      </Button>
+                    )}
                     <Button variant="outline" onClick={() => setLocation('/')} data-testid="button-skip-black-card">
                       Skip - View Leaderboard
                     </Button>
@@ -292,37 +336,49 @@ export default function RoundSummary() {
         </div>
       </div>
 
-      {/* Black Card Selection Dialog */}
+      {/* Black Card Selection Dialog - In-Person Mode */}
       <AlertDialog open={blackCardDialogOpen} onOpenChange={setBlackCardDialogOpen}>
-        <AlertDialogContent className="max-w-2xl">
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Select Black Card</AlertDialogTitle>
             <AlertDialogDescription>
-              Choose a black card to apply additional market effects
+              Choose a black card number to apply additional market effects
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <div className="grid gap-3 max-h-96 overflow-y-auto py-4">
-            {blackCards.map(card => (
-              <div
-                key={card.id}
-                onClick={() => handleBlackCardReveal(card)}
-                className="p-4 rounded-lg border hover-elevate cursor-pointer"
-              >
-                <div className="font-semibold mb-1">{card.cardNumber} - {card.title}</div>
-                <div className="text-sm text-muted-foreground mb-2">{card.cardText}</div>
-                <div className="flex gap-4 text-xs">
-                  <span>E: {Number(card.equityModifier) > 0 ? '+' : ''}{card.equityModifier}%</span>
-                  <span>D: {Number(card.debtModifier) > 0 ? '+' : ''}{card.debtModifier}%</span>
-                  <span>G: {Number(card.goldModifier) > 0 ? '+' : ''}{card.goldModifier}%</span>
-                  <span>C: {Number(card.cashModifier) > 0 ? '+' : ''}{card.cashModifier}%</span>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-2 block">Black Card Number</label>
+            <Select value={selectedBlackCardNumber} onValueChange={setSelectedBlackCardNumber}>
+              <SelectTrigger data-testid="select-black-card-number">
+                <SelectValue placeholder="Select card number" />
+              </SelectTrigger>
+              <SelectContent>
+                {blackCards.map(card => (
+                  <SelectItem key={card.id} value={card.cardNumber}>
+                    {card.cardNumber}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedBlackCardNumber && (
+              <div className="mt-4 p-3 rounded-lg bg-muted">
+                <div className="text-sm text-muted-foreground mb-1">Card Text</div>
+                <div className="text-sm">
+                  {blackCards.find(c => c.cardNumber === selectedBlackCardNumber)?.cardText}
                 </div>
               </div>
-            ))}
+            )}
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setSelectedBlackCardNumber("")}>Cancel</AlertDialogCancel>
+            <Button 
+              onClick={handleInPersonBlackCardSelect} 
+              disabled={!selectedBlackCardNumber || applyBlackCardMutation.isPending}
+              data-testid="button-apply-black-card"
+            >
+              {applyBlackCardMutation.isPending ? "Applying..." : "Apply Card"}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
