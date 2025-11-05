@@ -6,6 +6,30 @@ CycleSense Leaderboard is a full-stack web application for an offline investment
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## NAV Calculation Formula
+
+### After Color Card
+```
+Weighted Return = (Equity% ÷ 100) × Equity Return 
+                + (Debt% ÷ 100) × Debt Return
+                + (Gold% ÷ 100) × Gold Return
+                + (Cash% ÷ 100) × Cash Return
+
+NAV After Color Card = NAV Before × (1 + Weighted Return ÷ 100) + Emotion Score + Pitch Score
+```
+
+### After Black Card (if applied)
+```
+Total Modifier = (Equity% ÷ 100) × Equity Modifier
+               + (Debt% ÷ 100) × Debt Modifier
+               + (Gold% ÷ 100) × Gold Modifier
+               + (Cash% ÷ 100) × Cash Modifier
+
+Final NAV = NAV After Color Card × (1 + Total Modifier ÷ 100)
+```
+
+**Note:** Black card modifiers apply multiplicatively to the NAV after color card (which already includes pitch/emotion scores).
+
 ## System Architecture
 
 ### Frontend Architecture

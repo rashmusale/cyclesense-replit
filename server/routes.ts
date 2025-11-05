@@ -348,7 +348,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (cash / 100) * cashReturn
       );
       
-      let navAfter = navBefore * (1 + weightedReturn / 100);
+      // Apply weighted return and add pitch/emotion scores
+      let navAfter = navBefore * (1 + weightedReturn / 100) + (pitchScore || 0) + (emotionScore || 0);
 
       // Apply black card if present
       if (round.blackCardId) {
@@ -443,7 +444,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           (allocation.cash / 100) * cashReturn
         );
         
-        const navAfter = navBefore * (1 + weightedReturn / 100);
+        // Apply weighted return and add pitch/emotion scores
+        const navAfter = navBefore * (1 + weightedReturn / 100) + allocation.pitchScore + allocation.emotionScore;
         
         // Update allocation with new NAV
         await storage.updateTeamAllocation(allocation.id, {
