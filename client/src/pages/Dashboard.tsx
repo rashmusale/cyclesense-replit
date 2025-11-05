@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Trophy, TrendingUp, History, CreditCard } from "lucide-react";
+import { Download, Trophy, TrendingUp, History, CreditCard, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { Team, GameState, TeamAllocation, Round } from "@shared/schema";
@@ -21,11 +21,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [endGameModalOpen, setEndGameModalOpen] = useState(false);
+  const [gameRulesOpen, setGameRulesOpen] = useState(false);
 
   const { data: gameState } = useQuery<GameState>({
     queryKey: ["/api/game-state"],
@@ -201,34 +209,166 @@ export default function Dashboard() {
 
   if (!hasStarted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="text-center max-w-2xl">
-          <div className="flex justify-center mb-12">
-            <img src={logoUrl} alt="CycleSense" className="w-96 h-96" />
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={() => setLocation('/game-setup')} 
-              size="lg"
-              className="px-8"
-              data-testid="button-new-game"
-            >
-              New Game
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setLocation('/manage-cards')} 
-              size="lg"
-              className="px-8"
-              data-testid="button-manage-cards-home"
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Manage Cards
-            </Button>
+      <>
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <div className="text-center max-w-2xl">
+            <div className="flex justify-center mb-12">
+              <img src={logoUrl} alt="CycleSense" className="w-96 h-96" />
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                onClick={() => setLocation('/game-setup')} 
+                size="lg"
+                className="px-8"
+                data-testid="button-new-game"
+              >
+                New Game
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setGameRulesOpen(true)} 
+                size="lg"
+                className="px-8"
+                data-testid="button-game-rules"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                Game Rules
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setLocation('/manage-cards')} 
+                size="lg"
+                className="px-8"
+                data-testid="button-manage-cards-home"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Manage Cards
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+
+        <Dialog open={gameRulesOpen} onOpenChange={setGameRulesOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-3xl font-bold">CycleSense Game Rules</DialogTitle>
+              <DialogDescription className="text-lg italic">
+                A Game of Markets, Mindsets & Momentum
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6 mt-4">
+              <div className="bg-accent/20 p-4 rounded-md border-l-4 border-primary">
+                <p className="font-semibold text-lg">Markets move in cycles. Investors move in emotions. Winners move with sense.</p>
+                <p className="mt-2 text-muted-foreground">
+                  Cycle Sense helps in experiencing how portfolios and mindsets behave through real market phases. Players play as fund managers navigating expansion, slowdown, crisis, and recovery, just like real markets.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <h3 className="font-bold text-xl border-b pb-2">Your Mission</h3>
+                  <ol className="list-decimal list-inside space-y-2 text-sm">
+                    <li>Manage ₹100 Cr across Equity, Debt, Gold & Cash</li>
+                    <li>Read the scene, sense the cycle, make your call and justify it</li>
+                    <li>Every round tests your logic and your temperament</li>
+                    <li>Team with highest NAV wins</li>
+                  </ol>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-bold text-xl border-b pb-2">Game Components</h3>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <p className="font-semibold">Rolling Die:</p>
+                      <p className="text-muted-foreground">Decides which colour deck is played each round</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Portfolio Card:</p>
+                      <p className="text-muted-foreground">4 boxes for Equity, Debt, Gold, Cash where teams place tokens</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Color Decks:</p>
+                      <ul className="list-disc list-inside text-muted-foreground ml-2">
+                        <li>🟢 Green – Early Recovery</li>
+                        <li>🔵 Blue – Expansion</li>
+                        <li>🟠 Orange – Slowdown/Stress</li>
+                        <li>🔴 Red – Crisis/Reset</li>
+                        <li>⚫ Black – Shocks/Twists</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Tokens:</p>
+                      <p className="text-muted-foreground">20 per team. Used for allocations.</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Emotion Tokens:</p>
+                      <p className="text-muted-foreground">Confidence, Discipline, Patience, Conviction, Adaptability</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-bold text-xl border-b pb-2">Round Flow</h3>
+                  <ol className="list-decimal list-inside space-y-2 text-sm">
+                    <li>Facilitator rolls the die to choose the deck/phase color (green/blue/orange/red)</li>
+                    <li>Facilitator picks top card from the chosen color deck & reads it aloud</li>
+                    <li>Each team decides on rebalance (0-20%) and picks one emotion token</li>
+                    <li>One by one each team is asked to pitch allocation (1 min)</li>
+                    <li>Facilitator scores Pitch (0–5) + Emotion (0–5)</li>
+                    <li>Facilitator shows market results → NAV updated on tracker</li>
+                    <li>Facilitator draws a Black Card. No allocation change allowed. NAV updated.</li>
+                    <li>Leaderboard revealed</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <h3 className="font-bold text-xl border-b pb-2">Game Setup</h3>
+                  <ol className="list-decimal list-inside space-y-2 text-sm">
+                    <li>Minimum 2 teams, each with 2–5 players</li>
+                    <li>Each team manages ₹100 Cr (20 tokens of ₹5 Cr each)</li>
+                    <li>Each team receives one Portfolio Card with 4 asset classes - Equity, Debt, Gold, Cash</li>
+                    <li>Each team gets 5 Emotion Tokens - Confidence, Discipline, Patience, Conviction, Adaptability</li>
+                    <li>Starting NAV = ₹10</li>
+                    <li>Starting Allocation: Teams allocate their ₹100 Cr based on how they view the market today</li>
+                    <li>The Facilitator is the Market - runs each round, reveals scenarios, and drives outcomes</li>
+                    <li>The number of rounds will be decided by the facilitator depending on time and flow</li>
+                  </ol>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-bold text-xl border-b pb-2">Scoring System</h3>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <p className="font-semibold">1. Pitch (0–5 points):</p>
+                      <p className="text-muted-foreground">Strength of reasoning & story</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">2. Emotion (0–5 points):</p>
+                      <p className="text-muted-foreground">Choice of emotion token</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">3. Portfolio Returns:</p>
+                      <p className="text-muted-foreground">Based on market outcome</p>
+                    </div>
+                    <div className="bg-muted p-3 rounded-md">
+                      <p className="font-semibold mb-1">NAV Formula:</p>
+                      <p className="font-mono text-xs">New NAV = Old NAV × (1 + Portfolio Return) + Pitch + Emotion</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-primary/10 p-6 rounded-md text-center border-2 border-primary/30">
+                <p className="text-2xl font-bold italic">"It's not about guessing markets. It's about sensing them."</p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 

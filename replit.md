@@ -110,7 +110,16 @@ Final NAV = NAV After Color Card × (1 + Total Modifier ÷ 100)
 
 ## Recent Changes
 
-### November 5, 2025 (Latest) - Portfolio Change Constraint
+### November 5, 2025 (Latest) - Game Rules Button
+
+**New Feature:**
+- Added "Game Rules" button to welcome screen alongside "New Game" and "Manage Cards"
+- Opens comprehensive game rules dialog with all game information
+- Includes: Mission, Game Components, Round Flow, Game Setup, Scoring System, and Quick Tip
+- Clean, organized layout with sections for easy reading
+- Scrollable modal for mobile and desktop viewing
+
+### November 5, 2025 - Portfolio Change Constraint
 
 **New Validation Rule:**
 - Added 20% total portfolio change limit per round (from Round 2 onwards)
