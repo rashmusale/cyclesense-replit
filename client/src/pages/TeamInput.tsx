@@ -328,9 +328,6 @@ export default function TeamInput() {
                         <TableCell className="font-semibold">{team.name}</TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <div className="text-xs italic text-muted-foreground/60 text-center">
-                              prev: {getPreviousAllocation(team.id)?.equity || 0}%
-                            </div>
                             <Input
                               type="number"
                               min="0"
@@ -340,13 +337,13 @@ export default function TeamInput() {
                               className="text-center font-mono"
                               data-testid={`input-equity-${team.id}`}
                             />
+                            <div className="text-xs italic text-muted-foreground/60 text-center">
+                              prev: {getPreviousAllocation(team.id)?.equity || 0}%
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <div className="text-xs italic text-muted-foreground/60 text-center">
-                              prev: {getPreviousAllocation(team.id)?.debt || 0}%
-                            </div>
                             <Input
                               type="number"
                               min="0"
@@ -356,13 +353,13 @@ export default function TeamInput() {
                               className="text-center font-mono"
                               data-testid={`input-debt-${team.id}`}
                             />
+                            <div className="text-xs italic text-muted-foreground/60 text-center">
+                              prev: {getPreviousAllocation(team.id)?.debt || 0}%
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <div className="text-xs italic text-muted-foreground/60 text-center">
-                              prev: {getPreviousAllocation(team.id)?.gold || 0}%
-                            </div>
                             <Input
                               type="number"
                               min="0"
@@ -372,13 +369,13 @@ export default function TeamInput() {
                               className="text-center font-mono"
                               data-testid={`input-gold-${team.id}`}
                             />
+                            <div className="text-xs italic text-muted-foreground/60 text-center">
+                              prev: {getPreviousAllocation(team.id)?.gold || 0}%
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <div className="text-xs italic text-muted-foreground/60 text-center">
-                              prev: {getPreviousAllocation(team.id)?.cash || 0}%
-                            </div>
                             <Input
                               type="number"
                               min="0"
@@ -388,6 +385,9 @@ export default function TeamInput() {
                               className="text-center font-mono"
                               data-testid={`input-cash-${team.id}`}
                             />
+                            <div className="text-xs italic text-muted-foreground/60 text-center">
+                              prev: {getPreviousAllocation(team.id)?.cash || 0}%
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
