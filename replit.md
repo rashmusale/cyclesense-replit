@@ -83,3 +83,52 @@ Preferred communication style: Simple, everyday language.
 - **WebSocket Support**: Via `ws` package for Replit.
 - **Schema Management**: Drizzle ORM with `npm run db:push`.
 - **Sample Data**: Initializes color and black cards on first run.
+
+## Recent Changes
+
+### November 5, 2025 - End Game Navigation Fix
+
+**Problem Identified:**
+- End Game button successfully reset backend data but Dashboard remained showing empty Leaderboard instead of Welcome screen
+- Multiple approaches attempted: `setLocation("/")`, `refetchQueries()`, `invalidateQueries()`, `setQueryData()` - all failed
+
+**Root Cause:**
+- React Query cache not properly resetting to initial state after game reset
+- Component re-render timing issues with various cache update methods
+
+**Final Solution:**
+- Use `queryClient.resetQueries()` to reset all queries to initial undefined state
+- This forces Dashboard component to re-render with `hasStarted = false`
+- Dashboard conditional rendering: `if (!hasStarted)` shows Welcome screen
+
+**Implementation:**
+```typescript
+// Dashboard.tsx - resetGameMutation onSuccess
+queryClient.resetQueries({ queryKey: ["/api/teams"] });
+queryClient.resetQueries({ queryKey: ["/api/game-state"] });
+queryClient.resetQueries({ queryKey: ["/api/rounds"] });
+queryClient.resetQueries({ queryKey: ["/api/allocations"] });
+```
+
+**Verified Behavior:**
+- Click "End Game" → Confirm → CSV downloads → Queries reset → Welcome screen instantly displays
+- Clean transition from Leaderboard to "Welcome to CycleSense" screen with "New Game" and "Manage Cards" buttons
+
+### November 5, 2025 (Earlier) - Card Display & Black Card Draw Improvements
+
+**Card Display Simplification:**
+- Removed "Title" field from all color card displays (both Virtual and In-Person modes)
+- Color cards now show only: Card Number and Market Event (card text)
+- Cleaner, more focused card presentation
+
+**Virtual Mode Black Card Draw Flow:**
+- Draw Random Black Card now shows drawn card before applying
+- Displays card number and card text in purple-bordered panel
+- "Apply Market Impact" button to confirm and apply black card
+- "Draw Different Card" button to redraw if desired
+- NAV recalculation occurs only after clicking "Apply Market Impact"
+
+**In-Person Mode Black Card Selection:**
+- Dropdown shows only card numbers (no titles or asset modifiers)
+- After selecting card number, card text appears below dropdown
+- Clean, minimal selection interface

@@ -48,16 +48,17 @@ export default function Dashboard() {
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/game-state"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/rounds"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/allocations"] });
+      // Reset all queries to initial state to force Dashboard to show welcome screen
+      queryClient.resetQueries({ queryKey: ["/api/teams"] });
+      queryClient.resetQueries({ queryKey: ["/api/game-state"] });
+      queryClient.resetQueries({ queryKey: ["/api/rounds"] });
+      queryClient.resetQueries({ queryKey: ["/api/allocations"] });
+      
       toast({
         title: "Game Ended",
-        description: "Game data exported and cleared. Redirecting to home...",
+        description: "Game data exported and cleared.",
       });
       setEndGameModalOpen(false);
-      setLocation("/");
     },
   });
 
