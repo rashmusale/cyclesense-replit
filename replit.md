@@ -120,6 +120,11 @@ Final NAV = NAV After Color Card × (1 + Total Modifier ÷ 100)
 - Validation prevents submission if any team exceeds the 20% limit
 - Round 1 is exempt from this constraint (no previous allocation to compare)
 
+**UI Enhancements:**
+- Previous allocation values displayed above each input field in faint, italic, small text (e.g., "prev: 40%")
+- Helps teams make informed decisions while staying within 20% change constraint
+- Non-editable reference text for quick comparison
+
 ### November 5, 2025 - Dramatic Animations & Phase-Specific Styling
 
 **Visual Enhancements:**

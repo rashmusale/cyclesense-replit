@@ -327,48 +327,68 @@ export default function TeamInput() {
                       <TableRow key={team.id}>
                         <TableCell className="font-semibold">{team.name}</TableCell>
                         <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={data.equity}
-                            onChange={(e) => updateTeamField(team.id, 'equity', parseInt(e.target.value) || 0)}
-                            className="text-center font-mono"
-                            data-testid={`input-equity-${team.id}`}
-                          />
+                          <div className="space-y-1">
+                            <div className="text-xs italic text-muted-foreground/60 text-center">
+                              prev: {getPreviousAllocation(team.id)?.equity || 0}%
+                            </div>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={data.equity}
+                              onChange={(e) => updateTeamField(team.id, 'equity', parseInt(e.target.value) || 0)}
+                              className="text-center font-mono"
+                              data-testid={`input-equity-${team.id}`}
+                            />
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={data.debt}
-                            onChange={(e) => updateTeamField(team.id, 'debt', parseInt(e.target.value) || 0)}
-                            className="text-center font-mono"
-                            data-testid={`input-debt-${team.id}`}
-                          />
+                          <div className="space-y-1">
+                            <div className="text-xs italic text-muted-foreground/60 text-center">
+                              prev: {getPreviousAllocation(team.id)?.debt || 0}%
+                            </div>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={data.debt}
+                              onChange={(e) => updateTeamField(team.id, 'debt', parseInt(e.target.value) || 0)}
+                              className="text-center font-mono"
+                              data-testid={`input-debt-${team.id}`}
+                            />
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={data.gold}
-                            onChange={(e) => updateTeamField(team.id, 'gold', parseInt(e.target.value) || 0)}
-                            className="text-center font-mono"
-                            data-testid={`input-gold-${team.id}`}
-                          />
+                          <div className="space-y-1">
+                            <div className="text-xs italic text-muted-foreground/60 text-center">
+                              prev: {getPreviousAllocation(team.id)?.gold || 0}%
+                            </div>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={data.gold}
+                              onChange={(e) => updateTeamField(team.id, 'gold', parseInt(e.target.value) || 0)}
+                              className="text-center font-mono"
+                              data-testid={`input-gold-${team.id}`}
+                            />
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={data.cash}
-                            onChange={(e) => updateTeamField(team.id, 'cash', parseInt(e.target.value) || 0)}
-                            className="text-center font-mono"
-                            data-testid={`input-cash-${team.id}`}
-                          />
+                          <div className="space-y-1">
+                            <div className="text-xs italic text-muted-foreground/60 text-center">
+                              prev: {getPreviousAllocation(team.id)?.cash || 0}%
+                            </div>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={data.cash}
+                              onChange={(e) => updateTeamField(team.id, 'cash', parseInt(e.target.value) || 0)}
+                              className="text-center font-mono"
+                              data-testid={`input-cash-${team.id}`}
+                            />
+                          </div>
                         </TableCell>
                         <TableCell>
                           <Input
