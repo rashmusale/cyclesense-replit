@@ -231,7 +231,7 @@ export default function RoundSummary() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Eye className="w-5 h-5" />
-                <CardTitle>Asset Returns Revealed</CardTitle>
+                <CardTitle>Color Card Impact (Asset Returns)</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
