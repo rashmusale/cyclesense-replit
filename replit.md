@@ -110,6 +110,21 @@ Final NAV = NAV After Color Card × (1 + Total Modifier ÷ 100)
 
 ## Recent Changes
 
+### November 5, 2025 (Latest) - Dramatic Animations & Phase-Specific Styling
+
+**Visual Enhancements:**
+- Phase-specific background colors for color card sections (Green, Blue, Orange, Red themes)
+- Black background with white/purple text for black card sections
+- 2.5 second dice rolling animation before color card reveal (Virtual mode)
+- 2.5 second black card drawing animation with spinning shuffle icon
+- Enhanced visual feedback makes game rounds more engaging and dramatic
+
+**UI Improvements:**
+- "Manage Cards" button removed from active game leaderboard (still available on welcome screen)
+- Color card sections now display with phase-appropriate backgrounds and borders
+- Black card sections styled with dark theme for dramatic effect
+- Animated loading states with bouncing dice/shuffle icons
+
 ### November 5, 2025 - End Game Navigation Fix
 
 **Problem Identified:**
