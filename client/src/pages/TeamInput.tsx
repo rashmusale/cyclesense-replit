@@ -20,6 +20,20 @@ interface TeamAllocationData {
   emotionScore: number;
 }
 
+interface TeamAllocation {
+  id: string;
+  teamId: string;
+  roundId: string;
+  equity: number;
+  debt: number;
+  gold: number;
+  cash: number;
+  pitchScore: number;
+  emotionScore: number;
+  navBefore: string;
+  navAfter: string;
+}
+
 export default function TeamInput() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -39,6 +53,10 @@ export default function TeamInput() {
     queryKey: ["/api/rounds"],
   });
 
+  const { data: allAllocations = [] } = useQuery<TeamAllocation[]>({
+    queryKey: ["/api/allocations"],
+  });
+
   const currentRound = rounds.find(r => r.roundNumber === gameState?.currentRound);
   
   const { data: colorCard } = useQuery<ColorCard>({
@@ -46,23 +64,34 @@ export default function TeamInput() {
     enabled: !!currentRound?.colorCardId,
   });
 
-  // Initialize team data with default values
+  // Initialize team data with previous round allocations or defaults
   useEffect(() => {
     if (teams.length > 0 && Object.keys(teamData).length === 0) {
       const initialData: Record<string, TeamAllocationData> = {};
+      
+      // Find previous round
+      const previousRoundNumber = (gameState?.currentRound || 1) - 1;
+      const previousRound = rounds.find(r => r.roundNumber === previousRoundNumber);
+      
       teams.forEach(team => {
+        // Try to find previous allocation for this team
+        const prevAllocation = previousRound 
+          ? allAllocations.find(a => a.teamId === team.id && a.roundId === previousRound.id)
+          : null;
+        
+        // Use previous allocation or default to 25
         initialData[team.id] = {
-          equity: 25,
-          debt: 25,
-          gold: 25,
-          cash: 25,
+          equity: prevAllocation?.equity || 25,
+          debt: prevAllocation?.debt || 25,
+          gold: prevAllocation?.gold || 25,
+          cash: prevAllocation?.cash || 25,
           pitchScore: 0,
           emotionScore: 0,
         };
       });
       setTeamData(initialData);
     }
-  }, [teams]);
+  }, [teams, rounds, allAllocations, gameState]);
 
   const updateTeamField = (teamId: string, field: keyof TeamAllocationData, value: number) => {
     setTeamData(prev => ({
