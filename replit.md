@@ -110,7 +110,17 @@ Final NAV = NAV After Color Card × (1 + Total Modifier ÷ 100)
 
 ## Recent Changes
 
-### November 5, 2025 (Latest) - Dramatic Animations & Phase-Specific Styling
+### November 5, 2025 (Latest) - Portfolio Change Constraint
+
+**New Validation Rule:**
+- Added 20% total portfolio change limit per round (from Round 2 onwards)
+- Total change = sum of absolute differences across all four assets (Equity, Debt, Gold, Cash)
+- Example: If previous round was E40% D30% G20% C10%, and new allocation is E45% D25% G20% C10%, total change = |5| + |-5| + |0| + |0| = 10% ✓
+- Teams can see their current total change percentage in the TeamInput table
+- Validation prevents submission if any team exceeds the 20% limit
+- Round 1 is exempt from this constraint (no previous allocation to compare)
+
+### November 5, 2025 - Dramatic Animations & Phase-Specific Styling
 
 **Visual Enhancements:**
 - Phase-specific background colors for color card sections with white text for maximum drama:

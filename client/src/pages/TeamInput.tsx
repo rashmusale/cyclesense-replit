@@ -121,8 +121,74 @@ export default function TeamInput() {
     return data.equity + data.debt + data.gold + data.cash;
   };
 
+  // Get previous round's allocation for a team
+  const getPreviousAllocation = (teamId: string) => {
+    const currentRoundNum = currentRound?.roundNumber || 1;
+    
+    if (currentRoundNum === 1) {
+      // For Round 1, use team's initial allocations
+      const team = teams.find(t => t.id === teamId);
+      return team ? {
+        equity: team.initialEquity || 25,
+        debt: team.initialDebt || 25,
+        gold: team.initialGold || 25,
+        cash: team.initialCash || 25,
+      } : null;
+    } else {
+      // For Round 2+, find previous round's allocation
+      const previousRoundNumber = currentRoundNum - 1;
+      const previousRound = rounds.find(r => r.roundNumber === previousRoundNumber);
+      const prevAllocation = previousRound 
+        ? allAllocations.find(a => a.teamId === teamId && a.roundId === previousRound.id)
+        : null;
+      
+      if (prevAllocation) {
+        return {
+          equity: prevAllocation.equity,
+          debt: prevAllocation.debt,
+          gold: prevAllocation.gold,
+          cash: prevAllocation.cash,
+        };
+      }
+      
+      // Fallback to team's initial allocations
+      const team = teams.find(t => t.id === teamId);
+      return team ? {
+        equity: team.initialEquity || 25,
+        debt: team.initialDebt || 25,
+        gold: team.initialGold || 25,
+        cash: team.initialCash || 25,
+      } : null;
+    }
+  };
+
+  // Calculate total portfolio change (sum of absolute differences)
+  const getTotalPortfolioChange = (teamId: string) => {
+    const currentData = teamData[teamId];
+    const previousData = getPreviousAllocation(teamId);
+    
+    if (!currentData || !previousData) return 0;
+    
+    const equityChange = Math.abs(currentData.equity - previousData.equity);
+    const debtChange = Math.abs(currentData.debt - previousData.debt);
+    const goldChange = Math.abs(currentData.gold - previousData.gold);
+    const cashChange = Math.abs(currentData.cash - previousData.cash);
+    
+    return equityChange + debtChange + goldChange + cashChange;
+  };
+
   const isValidAllocation = (teamId: string) => {
-    return getAllocationTotal(teamId) === 100;
+    const total = getAllocationTotal(teamId);
+    const change = getTotalPortfolioChange(teamId);
+    
+    // Must total 100%
+    if (total !== 100) return false;
+    
+    // For Round 2+, total change cannot exceed 20%
+    const currentRoundNum = currentRound?.roundNumber || 1;
+    if (currentRoundNum > 1 && change > 20) return false;
+    
+    return true;
   };
 
   const allAllocationsValid = teams.every(team => isValidAllocation(team.id));
@@ -133,8 +199,15 @@ export default function TeamInput() {
       
       // Validate all teams
       for (const team of teams) {
-        if (!isValidAllocation(team.id)) {
-          throw new Error(`${team.name} allocations must total 100%`);
+        const total = getAllocationTotal(team.id);
+        const change = getTotalPortfolioChange(team.id);
+        
+        if (total !== 100) {
+          throw new Error(`${team.name} allocations must total 100% (currently ${total}%)`);
+        }
+        
+        if (currentRound.roundNumber > 1 && change > 20) {
+          throw new Error(`${team.name} portfolio change (${change.toFixed(1)}%) exceeds 20% limit`);
         }
       }
 
@@ -196,7 +269,10 @@ export default function TeamInput() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-6">
           <h1 className="text-4xl font-bold mb-2">Round {currentRound.roundNumber} - Team Allocations</h1>
-          <p className="text-muted-foreground">Enter allocations for all teams (each must total 100%)</p>
+          <p className="text-muted-foreground">
+            Enter allocations for all teams (must total 100%
+            {currentRound.roundNumber > 1 && ", max 20% total portfolio change from previous round"})
+          </p>
         </div>
 
         <Card className="mb-6">
@@ -227,6 +303,7 @@ export default function TeamInput() {
                     <TableHead className="text-center w-[100px]">Cash %</TableHead>
                     <TableHead className="text-center w-[100px]">Pitch (0-5)</TableHead>
                     <TableHead className="text-center w-[100px]">Emotion (0-5)</TableHead>
+                    <TableHead className="text-center w-[90px]">Change %</TableHead>
                     <TableHead className="text-center w-[80px]">Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -241,7 +318,10 @@ export default function TeamInput() {
                       emotionScore: 0,
                     };
                     const total = getAllocationTotal(team.id);
-                    const isValid = total === 100;
+                    const change = getTotalPortfolioChange(team.id);
+                    const isValid = isValidAllocation(team.id);
+                    const totalValid = total === 100;
+                    const changeValid = currentRound.roundNumber === 1 || change <= 20;
 
                     return (
                       <TableRow key={team.id}>
@@ -313,12 +393,18 @@ export default function TeamInput() {
                           />
                         </TableCell>
                         <TableCell className="text-center">
+                          <div className={`font-mono text-sm ${changeValid ? 'text-green-600' : 'text-red-600'}`} data-testid={`text-change-${team.id}`}>
+                            {change.toFixed(1)}%
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
                           {isValid ? (
                             <CheckCircle className="w-5 h-5 text-green-500 inline" data-testid={`status-valid-${team.id}`} />
                           ) : (
                             <div className="flex flex-col items-center gap-1">
                               <AlertCircle className="w-5 h-5 text-red-500" data-testid={`status-invalid-${team.id}`} />
-                              <span className="text-xs text-red-500">{total}%</span>
+                              {!totalValid && <span className="text-xs text-red-500">Total: {total}%</span>}
+                              {totalValid && !changeValid && <span className="text-xs text-red-500">Change: {change.toFixed(1)}%</span>}
                             </div>
                           )}
                         </TableCell>
