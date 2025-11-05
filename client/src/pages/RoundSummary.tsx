@@ -73,6 +73,11 @@ export default function RoundSummary() {
     queryKey: ["/api/black-cards"],
   });
 
+  const { data: appliedBlackCard } = useQuery<BlackCard>({
+    queryKey: ["/api/black-cards", round?.blackCardId],
+    enabled: !!round?.blackCardId,
+  });
+
   const isVirtualMode = gameState?.mode === "virtual";
 
   // Get this round's allocations
@@ -179,6 +184,45 @@ export default function RoundSummary() {
           <p className="text-muted-foreground">NAV Updated (New NAV = Old NAV × (1 + Portfolio Return) + Pitch + Emotion)</p>
         </div>
 
+        {/* Team NAV Results */}
+        {roundAllocations.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Team NAV Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {teams.map(team => {
+                  const allocation = roundAllocations.find(a => a.teamId === team.id);
+                  if (!allocation) return null;
+                  
+                  const navBefore = parseFloat(allocation.navBefore);
+                  const navAfter = parseFloat(allocation.navAfter);
+                  const change = navAfter - navBefore;
+                  const changePct = ((navAfter / navBefore) - 1) * 100;
+
+                  return (
+                    <div key={team.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                      <div>
+                        <div className="font-semibold text-lg">{team.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Allocation: E{allocation.equity}% D{allocation.debt}% G{allocation.gold}% C{allocation.cash}%
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold">{navAfter.toFixed(2)}</div>
+                        <div className={`text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {change >= 0 ? '+' : ''}{change.toFixed(2)} ({changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%)
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Card Details */}
         <Card className={`mb-6 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].bg} border-2 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].border}`}>
           <CardHeader>
@@ -232,45 +276,6 @@ export default function RoundSummary() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Team NAV Results */}
-        {roundAllocations.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Team NAV Results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {teams.map(team => {
-                  const allocation = roundAllocations.find(a => a.teamId === team.id);
-                  if (!allocation) return null;
-                  
-                  const navBefore = parseFloat(allocation.navBefore);
-                  const navAfter = parseFloat(allocation.navAfter);
-                  const change = navAfter - navBefore;
-                  const changePct = ((navAfter / navBefore) - 1) * 100;
-
-                  return (
-                    <div key={team.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
-                      <div>
-                        <div className="font-semibold text-lg">{team.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Allocation: E{allocation.equity}% D{allocation.debt}% G{allocation.gold}% C{allocation.cash}%
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold">{navAfter.toFixed(2)}</div>
-                        <div className={`text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {change >= 0 ? '+' : ''}{change.toFixed(2)} ({changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%)
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Black Card Drawing Animation */}
         {isDrawingBlackCard && (
@@ -365,29 +370,49 @@ export default function RoundSummary() {
           </Card>
         )}
 
-        {/* Black Card Applied - DISABLED (buggy NAV calculation) */}
-        {false && round.blackCardId && selectedBlackCard && (
-          <Card className="mb-6 border-purple-500">
+        {/* Black Card Applied */}
+        {round.blackCardId && appliedBlackCard && (
+          <Card className="mb-6 bg-black/90 border-2 border-purple-500">
             <CardHeader>
-              <CardTitle className="text-purple-600">Black Card Applied</CardTitle>
+              <CardTitle className="text-white">Black Card Applied</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <div className="text-sm text-muted-foreground mb-1">Card</div>
-                  <div className="font-semibold">{selectedBlackCard.cardNumber} - {selectedBlackCard.title}</div>
+                  <div className="text-sm text-purple-200 mb-1">Card Number</div>
+                  <div className="font-semibold text-white">{appliedBlackCard.cardNumber}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground mb-1">Effect</div>
-                  <div>{selectedBlackCard.cardText}</div>
+                  <div className="text-sm text-purple-200 mb-1">Effect</div>
+                  <div className="text-white">{appliedBlackCard.cardText}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground mb-1">Modifiers</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div className="text-sm">Equity: {Number(selectedBlackCard.equityModifier) > 0 ? '+' : ''}{selectedBlackCard.equityModifier}%</div>
-                    <div className="text-sm">Debt: {Number(selectedBlackCard.debtModifier) > 0 ? '+' : ''}{selectedBlackCard.debtModifier}%</div>
-                    <div className="text-sm">Gold: {Number(selectedBlackCard.goldModifier) > 0 ? '+' : ''}{selectedBlackCard.goldModifier}%</div>
-                    <div className="text-sm">Cash: {Number(selectedBlackCard.cashModifier) > 0 ? '+' : ''}{selectedBlackCard.cashModifier}%</div>
+                  <div className="text-sm text-purple-200 mb-1">Asset Modifiers</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                      <span className="text-xs font-medium text-white/90 mb-1">Equity</span>
+                      <span className="font-mono font-bold text-lg text-white">
+                        {Number(appliedBlackCard.equityModifier) > 0 ? '+' : ''}{appliedBlackCard.equityModifier}%
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                      <span className="text-xs font-medium text-white/90 mb-1">Debt</span>
+                      <span className="font-mono font-bold text-lg text-white">
+                        {Number(appliedBlackCard.debtModifier) > 0 ? '+' : ''}{appliedBlackCard.debtModifier}%
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                      <span className="text-xs font-medium text-white/90 mb-1">Gold</span>
+                      <span className="font-mono font-bold text-lg text-white">
+                        {Number(appliedBlackCard.goldModifier) > 0 ? '+' : ''}{appliedBlackCard.goldModifier}%
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                      <span className="text-xs font-medium text-white/90 mb-1">Cash</span>
+                      <span className="font-mono font-bold text-lg text-white">
+                        {Number(appliedBlackCard.cashModifier) > 0 ? '+' : ''}{appliedBlackCard.cashModifier}%
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
