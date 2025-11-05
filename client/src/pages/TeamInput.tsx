@@ -398,7 +398,7 @@ export default function TeamInput() {
                               max="5"
                               value={data.pitchScore}
                               onChange={(e) => updateTeamField(team.id, 'pitchScore', parseInt(e.target.value) || 0)}
-                              className="text-center font-mono"
+                              className="text-center font-mono bg-accent/30"
                               data-testid={`input-pitch-${team.id}`}
                             />
                             <div className="text-xs italic text-transparent text-center select-none">
@@ -414,7 +414,7 @@ export default function TeamInput() {
                               max="5"
                               value={data.emotionScore}
                               onChange={(e) => updateTeamField(team.id, 'emotionScore', parseInt(e.target.value) || 0)}
-                              className="text-center font-mono"
+                              className="text-center font-mono bg-accent/30"
                               data-testid={`input-emotion-${team.id}`}
                             />
                             <div className="text-xs italic text-transparent text-center select-none">
