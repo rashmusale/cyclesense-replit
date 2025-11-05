@@ -15,7 +15,10 @@ export default function Header({ currentRound, onNewRound, onConfigureTeams, onN
         <div className="flex items-center justify-between h-16 gap-4">
           <div className="flex items-center gap-3">
             <img src={logoUrl} alt="CycleSense" className="h-10 w-10" />
-            <h1 className="text-2xl font-bold">CycleSense Leaderboard</h1>
+            <div>
+              <h1 className="text-2xl font-bold leading-tight">CycleSense</h1>
+              <p className="text-xs text-muted-foreground">Read. React. Rebalance.</p>
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
