@@ -289,10 +289,6 @@ export default function StartRound() {
                         <div className="font-mono font-semibold" data-testid="text-card-number">{drawnCard.cardNumber}</div>
                       </div>
                       <div>
-                        <div className="text-sm text-muted-foreground mb-1">Title</div>
-                        <div className="text-xl font-bold" data-testid="text-card-title">{drawnCard.title}</div>
-                      </div>
-                      <div>
                         <div className="text-sm text-muted-foreground mb-1">Market Event</div>
                         <div className="text-base" data-testid="text-card-text">{drawnCard.cardText}</div>
                       </div>
