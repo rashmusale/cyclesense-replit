@@ -37,6 +37,7 @@ export default function RoundSummary() {
   const [blackCardDialogOpen, setBlackCardDialogOpen] = useState(false);
   const [selectedBlackCard, setSelectedBlackCard] = useState<BlackCard | null>(null);
   const [selectedBlackCardNumber, setSelectedBlackCardNumber] = useState<string>("");
+  const [drawnBlackCard, setDrawnBlackCard] = useState<BlackCard | null>(null);
 
   const { data: gameState } = useQuery<GameState>({
     queryKey: ["/api/game-state"],
@@ -125,7 +126,13 @@ export default function RoundSummary() {
       return;
     }
     const randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
-    handleBlackCardReveal(randomCard);
+    setDrawnBlackCard(randomCard);
+  };
+
+  const handleApplyDrawnBlackCard = () => {
+    if (drawnBlackCard) {
+      handleBlackCardReveal(drawnBlackCard);
+    }
   };
 
   const handleInPersonBlackCardSelect = () => {
@@ -262,7 +269,7 @@ export default function RoundSummary() {
         )}
 
         {/* Black Card Prompt */}
-        {!round.blackCardId && (
+        {!round.blackCardId && !drawnBlackCard && (
           <Card className="mb-6 border-orange-500">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -290,6 +297,42 @@ export default function RoundSummary() {
                     </Button>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Drawn Black Card - Virtual Mode */}
+        {!round.blackCardId && drawnBlackCard && isVirtualMode && (
+          <Card className="mb-6 border-purple-500">
+            <CardHeader>
+              <CardTitle className="text-purple-600">Black Card Drawn</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">Card Number</div>
+                  <div className="font-mono font-semibold" data-testid="text-drawn-black-card-number">{drawnBlackCard.cardNumber}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">Card Text</div>
+                  <div className="text-base" data-testid="text-drawn-black-card-text">{drawnBlackCard.cardText}</div>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Button 
+                  onClick={handleApplyDrawnBlackCard} 
+                  disabled={applyBlackCardMutation.isPending}
+                  data-testid="button-apply-market-impact"
+                >
+                  {applyBlackCardMutation.isPending ? "Applying..." : "Apply Market Impact"}
+                </Button>
+                <Button variant="outline" onClick={() => setDrawnBlackCard(null)} data-testid="button-redraw-black-card">
+                  Draw Different Card
+                </Button>
+                <Button variant="outline" onClick={() => setLocation('/')} data-testid="button-skip-black-card-after-draw">
+                  Skip - View Leaderboard
+                </Button>
               </div>
             </CardContent>
           </Card>
