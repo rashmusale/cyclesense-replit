@@ -248,14 +248,6 @@ export default function Dashboard() {
             <div className="flex gap-2 flex-wrap">
               <Button 
                 variant="outline" 
-                onClick={() => setLocation('/manage-cards')}
-                data-testid="button-manage-cards"
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                Manage Cards
-              </Button>
-              <Button 
-                variant="outline" 
                 onClick={handleExport}
                 data-testid="button-export-csv"
               >
