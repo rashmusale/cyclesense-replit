@@ -113,8 +113,12 @@ Final NAV = NAV After Color Card × (1 + Total Modifier ÷ 100)
 ### November 5, 2025 (Latest) - Dramatic Animations & Phase-Specific Styling
 
 **Visual Enhancements:**
-- Phase-specific background colors for color card sections (Green, Blue, Orange, Red themes)
-- Black background with white/purple text for black card sections
+- Phase-specific background colors for color card sections with white text for maximum drama:
+  - Green Phase: #2e8b57 (sea green background)
+  - Blue Phase: #1e88e5 (bright blue background)
+  - Orange Phase: #f57c00 (vibrant orange background)
+  - Red Phase: #c62828 (deep red background)
+- Black background (#000000 at 90% opacity) with white/purple text for black card sections
 - 2.5 second dice rolling animation before color card reveal (Virtual mode)
 - 2.5 second black card drawing animation with spinning shuffle icon
 - Enhanced visual feedback makes game rounds more engaging and dramatic

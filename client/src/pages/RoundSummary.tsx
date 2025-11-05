@@ -27,6 +27,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const PHASE_COLORS = {
+  green: { bg: "bg-[#2e8b57]", border: "border-[#2e8b57]", text: "text-white", textMuted: "text-white/90" },
+  blue: { bg: "bg-[#1e88e5]", border: "border-[#1e88e5]", text: "text-white", textMuted: "text-white/90" },
+  orange: { bg: "bg-[#f57c00]", border: "border-[#f57c00]", text: "text-white", textMuted: "text-white/90" },
+  red: { bg: "bg-[#c62828]", border: "border-[#c62828]", text: "text-white", textMuted: "text-white/90" },
+};
+
 export default function RoundSummary() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -173,22 +180,22 @@ export default function RoundSummary() {
         </div>
 
         {/* Card Details */}
-        <Card className="mb-6">
+        <Card className={`mb-6 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].bg} border-2 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].border}`}>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Card Details</CardTitle>
+              <CardTitle className={PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].text}>Card Details</CardTitle>
               <PhaseBadge phase={round.phase.toUpperCase() as any} />
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Card Number</div>
-                <div className="font-mono font-semibold">{colorCard.cardNumber}</div>
+                <div className={`text-sm mb-1 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].textMuted}`}>Card Number</div>
+                <div className={`font-mono font-semibold ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].text}`}>{colorCard.cardNumber}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Market Event</div>
-                <div className="text-base">{colorCard.cardText}</div>
+                <div className={`text-sm mb-1 ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].textMuted}`}>Market Event</div>
+                <div className={`text-base ${PHASE_COLORS[round.phase as keyof typeof PHASE_COLORS].text}`}>{colorCard.cardText}</div>
               </div>
             </div>
           </CardContent>

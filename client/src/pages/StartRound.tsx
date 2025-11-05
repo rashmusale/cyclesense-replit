@@ -21,10 +21,10 @@ const PHASES = [
 ];
 
 const PHASE_COLORS = {
-  green: { bg: "bg-[#16A34A]/20", border: "border-[#16A34A]/40", text: "text-[#16A34A]", textMuted: "text-[#16A34A]/80" },
-  blue: { bg: "bg-[#2563EB]/20", border: "border-[#2563EB]/40", text: "text-[#2563EB]", textMuted: "text-[#2563EB]/80" },
-  orange: { bg: "bg-[#F97316]/20", border: "border-[#F97316]/40", text: "text-[#F97316]", textMuted: "text-[#F97316]/80" },
-  red: { bg: "bg-[#DC2626]/20", border: "border-[#DC2626]/40", text: "text-[#DC2626]", textMuted: "text-[#DC2626]/80" },
+  green: { bg: "bg-[#2e8b57]", border: "border-[#2e8b57]", text: "text-white", textMuted: "text-white/90" },
+  blue: { bg: "bg-[#1e88e5]", border: "border-[#1e88e5]", text: "text-white", textMuted: "text-white/90" },
+  orange: { bg: "bg-[#f57c00]", border: "border-[#f57c00]", text: "text-white", textMuted: "text-white/90" },
+  red: { bg: "bg-[#c62828]", border: "border-[#c62828]", text: "text-white", textMuted: "text-white/90" },
 };
 
 type VirtualStep = "roll-dice" | "rolling-animation" | "draw-card" | "card-drawn";
