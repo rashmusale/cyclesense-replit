@@ -64,34 +64,46 @@ export default function TeamInput() {
     enabled: !!currentRound?.colorCardId,
   });
 
-  // Initialize team data with previous round allocations or defaults
+  // Initialize team data with previous round allocations or initial allocations from game setup
   useEffect(() => {
-    if (teams.length > 0 && Object.keys(teamData).length === 0) {
+    if (teams.length > 0 && currentRound) {
       const initialData: Record<string, TeamAllocationData> = {};
       
-      // Find previous round
-      const previousRoundNumber = (gameState?.currentRound || 1) - 1;
-      const previousRound = rounds.find(r => r.roundNumber === previousRoundNumber);
+      const currentRoundNum = currentRound.roundNumber;
       
       teams.forEach(team => {
-        // Try to find previous allocation for this team
-        const prevAllocation = previousRound 
-          ? allAllocations.find(a => a.teamId === team.id && a.roundId === previousRound.id)
-          : null;
-        
-        // Use previous allocation or default to 25
-        initialData[team.id] = {
-          equity: prevAllocation?.equity || 25,
-          debt: prevAllocation?.debt || 25,
-          gold: prevAllocation?.gold || 25,
-          cash: prevAllocation?.cash || 25,
-          pitchScore: 0,
-          emotionScore: 0,
-        };
+        if (currentRoundNum === 1) {
+          // For Round 1, use the team's initial allocations from game setup
+          initialData[team.id] = {
+            equity: team.initialEquity || 25,
+            debt: team.initialDebt || 25,
+            gold: team.initialGold || 25,
+            cash: team.initialCash || 25,
+            pitchScore: 0,
+            emotionScore: 0,
+          };
+        } else {
+          // For Round 2+, find previous round's allocation
+          const previousRoundNumber = currentRoundNum - 1;
+          const previousRound = rounds.find(r => r.roundNumber === previousRoundNumber);
+          const prevAllocation = previousRound 
+            ? allAllocations.find(a => a.teamId === team.id && a.roundId === previousRound.id)
+            : null;
+          
+          // Use previous allocation or fallback to team's initial allocations
+          initialData[team.id] = {
+            equity: prevAllocation?.equity || team.initialEquity || 25,
+            debt: prevAllocation?.debt || team.initialDebt || 25,
+            gold: prevAllocation?.gold || team.initialGold || 25,
+            cash: prevAllocation?.cash || team.initialCash || 25,
+            pitchScore: 0,
+            emotionScore: 0,
+          };
+        }
       });
       setTeamData(initialData);
     }
-  }, [teams, rounds, allAllocations, gameState]);
+  }, [teams, rounds, allAllocations, currentRound?.id]);
 
   const updateTeamField = (teamId: string, field: keyof TeamAllocationData, value: number) => {
     setTeamData(prev => ({

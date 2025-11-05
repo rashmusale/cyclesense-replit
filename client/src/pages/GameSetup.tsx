@@ -47,6 +47,9 @@ export default function GameSetup() {
         }
       }
 
+      // Reset game first to clear any old data
+      await apiRequest("POST", "/api/game/reset", {});
+
       // Create game state
       const gameStateRes = await apiRequest("POST", "/api/game-state", { mode, currentRound: 0, isActive: false });
       const gameStateResponse = await gameStateRes.json();
@@ -54,7 +57,13 @@ export default function GameSetup() {
       // Create teams
       const createdTeams = [];
       for (const team of teams) {
-        const teamRes = await apiRequest("POST", "/api/teams", { name: team.name });
+        const teamRes = await apiRequest("POST", "/api/teams", { 
+          name: team.name,
+          initialEquity: team.equity,
+          initialDebt: team.debt,
+          initialGold: team.gold,
+          initialCash: team.cash
+        });
         const teamResponse = await teamRes.json();
         createdTeams.push({ ...teamResponse, initialAllocation: team });
       }

@@ -18,6 +18,11 @@ export const teams = pgTable("teams", {
   currentNav: decimal("current_nav", { precision: 10, scale: 2 }).notNull().default('10.00'),
   pitchTotal: integer("pitch_total").notNull().default(0),
   emotionTotal: integer("emotion_total").notNull().default(0),
+  // Initial allocations from game setup (used as defaults for Round 1)
+  initialEquity: integer("initial_equity").notNull().default(25),
+  initialDebt: integer("initial_debt").notNull().default(25),
+  initialGold: integer("initial_gold").notNull().default(25),
+  initialCash: integer("initial_cash").notNull().default(25),
 });
 
 // Color Cards (Green, Blue, Orange, Red phase cards)

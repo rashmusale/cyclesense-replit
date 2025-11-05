@@ -165,6 +165,27 @@ The application uses PostgreSQL via Neon serverless database for persistent card
 
 ## Recent Changes
 
+### November 5, 2025 - Allocation Pre-fill & Enhanced End Game Flow
+
+**Allocation Pre-fill from Previous Round:**
+- Added `initialEquity`, `initialDebt`, `initialGold`, `initialCash` fields to teams table
+- GameSetup now sends initial allocations when creating teams
+- TeamInput pre-fills Round 1 with initial allocations from game setup
+- TeamInput pre-fills Round 2+ with allocations from previous round
+- useEffect dependency on `currentRound?.id` ensures fresh data for each round
+
+**Enhanced End Game Flow:**
+- End Game button now automatically downloads game data as CSV before resetting
+- CSV includes: Round, Team, Equity %, Debt %, Gold %, Cash %, Pitch Score, Emotion Score, NAV Before, NAV After
+- After download, game resets and returns to welcome screen
+- Removed separate "Reset Game" button for cleaner UI
+- GameSetup now calls `/api/game/reset` before creating new game to prevent data accumulation
+
+**Bug Fixes:**
+- Fixed team data persistence between test runs by resetting before new game
+- Fixed allocation pre-fill not updating when navigating between rounds
+- Fixed Round 2+ showing initial allocations instead of previous round values
+
 ### November 4, 2025 - Database Integration & Card Management
 
 **PostgreSQL Database Integration:**
