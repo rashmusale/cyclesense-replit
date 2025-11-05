@@ -10,6 +10,7 @@ import { Download, Trophy, TrendingUp, History, CreditCard } from "lucide-react"
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { Team, GameState, TeamAllocation, Round } from "@shared/schema";
+import logoUrl from "@assets/CycleSense LOGO_1761839230730.png";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -200,16 +201,19 @@ export default function Dashboard() {
 
   if (!hasStarted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl">Welcome to CycleSense</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-2xl">
+          <div className="flex justify-center mb-8">
+            <img src={logoUrl} alt="CycleSense Logo" className="w-48 h-48" />
+          </div>
+          <h1 className="text-6xl font-bold mb-4">CycleSense</h1>
+          <p className="text-2xl text-muted-foreground mb-12">Read. React. Rebalance.</p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               onClick={() => setLocation('/game-setup')} 
-              className="w-full"
               size="lg"
+              className="px-8"
               data-testid="button-new-game"
             >
               New Game
@@ -217,14 +221,15 @@ export default function Dashboard() {
             <Button 
               variant="outline"
               onClick={() => setLocation('/manage-cards')} 
-              className="w-full"
+              size="lg"
+              className="px-8"
               data-testid="button-manage-cards-home"
             >
               <CreditCard className="w-4 h-4 mr-2" />
               Manage Cards
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
