@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import PhaseBadge from "@/components/PhaseBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, AlertCircle, Shuffle } from "lucide-react";
+import { Eye, AlertCircle, Shuffle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -38,6 +38,7 @@ export default function RoundSummary() {
   const [selectedBlackCard, setSelectedBlackCard] = useState<BlackCard | null>(null);
   const [selectedBlackCardNumber, setSelectedBlackCardNumber] = useState<string>("");
   const [drawnBlackCard, setDrawnBlackCard] = useState<BlackCard | null>(null);
+  const [isDrawingBlackCard, setIsDrawingBlackCard] = useState(false);
 
   const { data: gameState } = useQuery<GameState>({
     queryKey: ["/api/game-state"],
@@ -125,8 +126,15 @@ export default function RoundSummary() {
       });
       return;
     }
-    const randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
-    setDrawnBlackCard(randomCard);
+    
+    // Show drawing animation for 2.5 seconds
+    setIsDrawingBlackCard(true);
+    
+    setTimeout(() => {
+      const randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
+      setDrawnBlackCard(randomCard);
+      setIsDrawingBlackCard(false);
+    }, 2500);
   };
 
   const handleApplyDrawnBlackCard = () => {
@@ -265,8 +273,30 @@ export default function RoundSummary() {
           </Card>
         )}
 
+        {/* Black Card Drawing Animation */}
+        {isDrawingBlackCard && (
+          <Card className="mb-6 bg-black/90 border-2 border-purple-500">
+            <CardContent className="p-12">
+              <div className="flex flex-col items-center justify-center space-y-6">
+                <div className="relative">
+                  <Shuffle className="w-24 h-24 text-purple-400 animate-bounce" />
+                  <div className="absolute inset-0 animate-spin">
+                    <Loader2 className="w-24 h-24 text-purple-400/30" />
+                  </div>
+                </div>
+                <div className="text-center space-y-2">
+                  <h3 className="text-2xl font-bold text-white">Drawing Black Card...</h3>
+                  <p className="text-purple-200 animate-pulse">
+                    Additional market forces incoming
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Black Card Prompt */}
-        {!round.blackCardId && !drawnBlackCard && (
+        {!round.blackCardId && !drawnBlackCard && !isDrawingBlackCard && (
           <Card className="mb-6 border-orange-500">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -301,19 +331,19 @@ export default function RoundSummary() {
 
         {/* Drawn Black Card - Virtual Mode */}
         {!round.blackCardId && drawnBlackCard && isVirtualMode && (
-          <Card className="mb-6 border-purple-500">
+          <Card className="mb-6 bg-black/90 border-2 border-purple-500">
             <CardHeader>
-              <CardTitle className="text-purple-600">Black Card Drawn</CardTitle>
+              <CardTitle className="text-white">Black Card Drawn</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <div className="text-sm text-muted-foreground mb-1">Card Number</div>
-                  <div className="font-mono font-semibold" data-testid="text-drawn-black-card-number">{drawnBlackCard.cardNumber}</div>
+                  <div className="text-sm text-purple-200 mb-1">Card Number</div>
+                  <div className="font-mono font-semibold text-white" data-testid="text-drawn-black-card-number">{drawnBlackCard.cardNumber}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground mb-1">Card Text</div>
-                  <div className="text-base" data-testid="text-drawn-black-card-text">{drawnBlackCard.cardText}</div>
+                  <div className="text-sm text-purple-200 mb-1">Card Text</div>
+                  <div className="text-base text-white" data-testid="text-drawn-black-card-text">{drawnBlackCard.cardText}</div>
                 </div>
               </div>
               <div className="flex gap-3 mt-6">
@@ -321,13 +351,14 @@ export default function RoundSummary() {
                   onClick={handleApplyDrawnBlackCard} 
                   disabled={applyBlackCardMutation.isPending}
                   data-testid="button-apply-market-impact"
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
                 >
                   {applyBlackCardMutation.isPending ? "Applying..." : "Apply Market Impact"}
                 </Button>
-                <Button variant="outline" onClick={() => setDrawnBlackCard(null)} data-testid="button-redraw-black-card">
+                <Button variant="outline" onClick={() => setDrawnBlackCard(null)} data-testid="button-redraw-black-card" className="border-purple-500 text-white hover:bg-purple-500/20">
                   Draw Different Card
                 </Button>
-                <Button variant="outline" onClick={() => setLocation('/')} data-testid="button-skip-black-card-after-draw">
+                <Button variant="outline" onClick={() => setLocation('/')} data-testid="button-skip-black-card-after-draw" className="border-purple-500 text-white hover:bg-purple-500/20">
                   Skip - View Leaderboard
                 </Button>
               </div>
