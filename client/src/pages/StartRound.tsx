@@ -183,11 +183,6 @@ export default function StartRound() {
                       <PhaseBadge phase={drawnCard.phase.toUpperCase() as any} />
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-lg mb-4">
-                      The dice rolled: <span className="font-bold">{PHASES.find(p => p.value === drawnCard.phase)?.label}</span>
-                    </p>
-                  </CardContent>
                 </Card>
 
                 <Card className="mb-6">
