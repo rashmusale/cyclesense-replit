@@ -17,11 +17,7 @@ const phaseStyles: Record<PhaseColor, string> = {
 export default function PhaseBadge({ phase, className }: PhaseBadgeProps) {
   return (
     <span 
-      className={cn(
-        "inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border",
-        phaseStyles[phase],
-        className
-      )}
+      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border text-white border-white/30 bg-[#1e88e5]"
       data-testid={`badge-phase-${phase.toLowerCase()}`}
     >
       {phase}
