@@ -164,7 +164,7 @@ export default function RoundSummary() {
           <p className="text-muted-foreground">Asset returns revealed and NAV scores calculated (New NAV = Old NAV × (1 + Portfolio Return) + Pitch + Emotion)</p>
         </div>
 
-        {/* Round Details */}
+        {/* Card Details */}
         <Card className="mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">
