@@ -161,7 +161,7 @@ export default function RoundSummary() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Round {round.roundNumber} Results</h1>
-          <p className="text-muted-foreground">Asset returns revealed and NAV scores calculated (New NAV = Old NAV × (1 + Portfolio Return) + Pitch + Emotion)</p>
+          <p className="text-muted-foreground">NAV Updated (New NAV = Old NAV × (1 + Portfolio Return) + Pitch + Emotion)</p>
         </div>
 
         {/* Card Details */}
