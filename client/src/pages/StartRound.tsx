@@ -305,9 +305,9 @@ export default function StartRound() {
                         </SelectContent>
                       </Select>
                       {selectedCardNumber && (
-                        <div className="mt-4 p-3 rounded-lg bg-muted">
-                          <div className="text-sm text-muted-foreground mb-1">Card Text</div>
-                          <div className="text-sm">
+                        <div className={`mt-4 p-4 rounded-lg ${PHASE_COLORS[selectedPhase as keyof typeof PHASE_COLORS].bg} border-2 ${PHASE_COLORS[selectedPhase as keyof typeof PHASE_COLORS].border}`}>
+                          <div className={`text-sm mb-2 ${PHASE_COLORS[selectedPhase as keyof typeof PHASE_COLORS].textMuted}`}>Card Text</div>
+                          <div className={`text-sm ${PHASE_COLORS[selectedPhase as keyof typeof PHASE_COLORS].text}`}>
                             {phaseColorCards.find(c => c.cardNumber === selectedCardNumber)?.cardText}
                           </div>
                         </div>
