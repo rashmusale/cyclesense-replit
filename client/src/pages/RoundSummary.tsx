@@ -168,7 +168,7 @@ export default function RoundSummary() {
         <Card className="mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Round Details</CardTitle>
+              <CardTitle>Card Details</CardTitle>
               <PhaseBadge phase={round.phase.toUpperCase() as any} />
             </div>
           </CardHeader>
