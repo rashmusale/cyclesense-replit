@@ -121,7 +121,9 @@ Final NAV = NAV After Color Card × (1 + Total Modifier ÷ 100)
 - Round 1 is exempt from this constraint (no previous allocation to compare)
 
 **UI Enhancements:**
-- Previous allocation values displayed above each input field in faint, italic, small text (e.g., "prev: 40%")
+- Previous allocation values displayed below each input field in faint, italic, small text (e.g., "prev: 40%")
+- All input boxes (asset allocations, pitch, emotion) align in a straight horizontal line
+- Number input spinner arrows removed for cleaner, direct value entry
 - Helps teams make informed decisions while staying within 20% change constraint
 - Non-editable reference text for quick comparison
 

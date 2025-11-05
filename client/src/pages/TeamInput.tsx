@@ -391,26 +391,36 @@ export default function TeamInput() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="5"
-                            value={data.pitchScore}
-                            onChange={(e) => updateTeamField(team.id, 'pitchScore', parseInt(e.target.value) || 0)}
-                            className="text-center font-mono"
-                            data-testid={`input-pitch-${team.id}`}
-                          />
+                          <div className="space-y-1">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="5"
+                              value={data.pitchScore}
+                              onChange={(e) => updateTeamField(team.id, 'pitchScore', parseInt(e.target.value) || 0)}
+                              className="text-center font-mono"
+                              data-testid={`input-pitch-${team.id}`}
+                            />
+                            <div className="text-xs italic text-transparent text-center select-none">
+                              &nbsp;
+                            </div>
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="5"
-                            value={data.emotionScore}
-                            onChange={(e) => updateTeamField(team.id, 'emotionScore', parseInt(e.target.value) || 0)}
-                            className="text-center font-mono"
-                            data-testid={`input-emotion-${team.id}`}
-                          />
+                          <div className="space-y-1">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="5"
+                              value={data.emotionScore}
+                              onChange={(e) => updateTeamField(team.id, 'emotionScore', parseInt(e.target.value) || 0)}
+                              className="text-center font-mono"
+                              data-testid={`input-emotion-${team.id}`}
+                            />
+                            <div className="text-xs italic text-transparent text-center select-none">
+                              &nbsp;
+                            </div>
+                          </div>
                         </TableCell>
                         <TableCell className="text-center">
                           <div className={`font-mono text-sm ${changeValid ? 'text-green-600' : 'text-red-600'}`} data-testid={`text-change-${team.id}`}>
