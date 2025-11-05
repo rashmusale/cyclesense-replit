@@ -14,10 +14,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ColorCard, GameState } from "@shared/schema";
 
 const PHASES = [
-  { value: "green", label: "Green - Bull Market" },
-  { value: "blue", label: "Blue - Stable Market" },
-  { value: "orange", label: "Orange - Market Correction" },
-  { value: "red", label: "Red - Bear Market" },
+  { value: "green", label: "Green - Bull Market", color: "text-[#2e8b57]" },
+  { value: "blue", label: "Blue - Stable Market", color: "text-[#1e88e5]" },
+  { value: "orange", label: "Orange - Market Correction", color: "text-[#f57c00]" },
+  { value: "red", label: "Red - Bear Market", color: "text-[#c62828]" },
 ];
 
 const PHASE_COLORS = {
@@ -281,8 +281,8 @@ export default function StartRound() {
                       {PHASES.map(phase => (
                         <div key={phase.value} className="flex items-center space-x-2 mb-2">
                           <RadioGroupItem value={phase.value} id={phase.value} data-testid={`radio-phase-${phase.value}`} />
-                          <Label htmlFor={phase.value} className="cursor-pointer">
-                            <PhaseBadge phase={phase.value.toUpperCase() as any} />
+                          <Label htmlFor={phase.value} className={`cursor-pointer font-medium ${phase.color}`}>
+                            {phase.label}
                           </Label>
                         </div>
                       ))}
