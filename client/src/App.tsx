@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Router } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,17 +16,19 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/game-setup" component={GameSetup} />
-      <Route path="/configure-teams" component={ConfigureTeams} />
-      <Route path="/start-round" component={StartRound} />
-      <Route path="/team-input" component={TeamInput} />
-      <Route path="/round-summary" component={RoundSummary} />
-      <Route path="/manage-cards" component={ManageCards} />
-      <Route component={NotFound} />
-    </Switch>
+    <Router base="/cyclesense-replit">
+      <Switch>
+        <Route path="/" component={Dashboard} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/game-setup" component={GameSetup} />
+        <Route path="/configure-teams" component={ConfigureTeams} />
+        <Route path="/start-round" component={StartRound} />
+        <Route path="/team-input" component={TeamInput} />
+        <Route path="/round-summary" component={RoundSummary} />
+        <Route path="/manage-cards" component={ManageCards} />
+        <Route component={NotFound} />
+      </Switch>
+    </Router>
   );
 }
 
