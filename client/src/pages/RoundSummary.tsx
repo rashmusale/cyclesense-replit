@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, AlertCircle, Shuffle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { storageService } from "@/lib/storage";
+import { createTeamAllocationWithNav } from "@/lib/game-logic";
 import type { Round, ColorCard, BlackCard, Team, TeamAllocation, GameState } from "@shared/schema";
 import {
   AlertDialog,
@@ -47,34 +49,49 @@ export default function RoundSummary() {
   const [drawnBlackCard, setDrawnBlackCard] = useState<BlackCard | null>(null);
   const [isDrawingBlackCard, setIsDrawingBlackCard] = useState(false);
 
-  const { data: gameState } = useQuery<GameState>({
-    queryKey: ["/api/game-state"],
+  const { data: gameState } = useQuery<GameState | undefined>({
+    queryKey: ["gameState"],
+    queryFn: () => storageService.getGameState(),
   });
 
-  const { data: round } = useQuery<Round>({
-    queryKey: ["/api/rounds", roundId],
+  const { data: round } = useQuery<Round | undefined>({
+    queryKey: ["round", roundId],
+    queryFn: () => roundId ? storageService.getRound(roundId) : Promise.resolve(undefined),
     enabled: !!roundId,
   });
 
-  const { data: colorCard } = useQuery<ColorCard>({
-    queryKey: ["/api/color-cards", round?.colorCardId],
+  const { data: colorCard } = useQuery<ColorCard | undefined>({
+    queryKey: ["colorCard", round?.colorCardId],
+    queryFn: () => round?.colorCardId ? storageService.getColorCard(round.colorCardId) : Promise.resolve(undefined),
     enabled: !!round?.colorCardId,
   });
 
   const { data: teams = [] } = useQuery<Team[]>({
-    queryKey: ["/api/teams"],
+    queryKey: ["teams"],
+    queryFn: () => storageService.getAllTeams(),
   });
 
   const { data: allocations = [] } = useQuery<TeamAllocation[]>({
-    queryKey: ["/api/allocations"],
+    queryKey: ["allocations"],
+    queryFn: async () => {
+      const rounds = await storageService.getAllRounds();
+      const allAllocs: TeamAllocation[] = [];
+      for (const round of rounds) {
+        const roundAllocs = await storageService.getAllocationsForRound(round.id);
+        allAllocs.push(...roundAllocs);
+      }
+      return allAllocs;
+    },
   });
 
   const { data: blackCards = [] } = useQuery<BlackCard[]>({
-    queryKey: ["/api/black-cards"],
+    queryKey: ["blackCards"],
+    queryFn: () => storageService.getAllBlackCards(),
   });
 
-  const { data: appliedBlackCard } = useQuery<BlackCard>({
-    queryKey: ["/api/black-cards", round?.blackCardId],
+  const { data: appliedBlackCard } = useQuery<BlackCard | undefined>({
+    queryKey: ["blackCard", round?.blackCardId],
+    queryFn: () => round?.blackCardId ? storageService.getBlackCard(round.blackCardId) : Promise.resolve(undefined),
     enabled: !!round?.blackCardId,
   });
 
@@ -85,17 +102,19 @@ export default function RoundSummary() {
 
   const applyBlackCardMutation = useMutation({
     mutationFn: async ({ blackCardId, savedAllocations }: { blackCardId: string; savedAllocations: TeamAllocation[] }) => {
+      if (!roundId) throw new Error("No round ID");
+      
       // Step 1: Update round with black card
-      await apiRequest("PATCH", `/api/rounds/${roundId}`, {
+      await storageService.updateRound(roundId, {
         blackCardId,
       });
       
       // Step 2: Delete existing allocations for this round (rollback NAVs)
-      await apiRequest("DELETE", `/api/allocations/round/${roundId}`, {});
+      await storageService.deleteAllocationsForRound(roundId);
       
-      // Step 3: Recreate allocations with same data (server will recalc NAV with black card)
+      // Step 3: Recreate allocations with same data (will recalc NAV with black card)
       const promises = savedAllocations.map(async (alloc) => {
-        const res = await apiRequest("POST", "/api/allocations", {
+        return await createTeamAllocationWithNav({
           teamId: alloc.teamId,
           roundId,
           equity: alloc.equity,
@@ -105,15 +124,14 @@ export default function RoundSummary() {
           pitchScore: alloc.pitchScore,
           emotionScore: alloc.emotionScore,
         });
-        return await res.json();
       });
       
       return await Promise.all(promises);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/rounds"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/allocations"] });
+      queryClient.invalidateQueries({ queryKey: ["rounds"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["allocations"] });
       toast({
         title: "Black Card Applied",
         description: "NAVs recalculated with black card effects",

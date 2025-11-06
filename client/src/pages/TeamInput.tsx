@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { storageService } from "@/lib/storage";
+import { createTeamAllocationWithNav } from "@/lib/game-logic";
 import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,26 +43,39 @@ export default function TeamInput() {
   // State: object keyed by teamId
   const [teamData, setTeamData] = useState<Record<string, TeamAllocationData>>({});
 
-  const { data: gameState } = useQuery<GameState>({
-    queryKey: ["/api/game-state"],
+  const { data: gameState } = useQuery<GameState | undefined>({
+    queryKey: ["gameState"],
+    queryFn: () => storageService.getGameState(),
   });
 
   const { data: teams = [] } = useQuery<Team[]>({
-    queryKey: ["/api/teams"],
+    queryKey: ["teams"],
+    queryFn: () => storageService.getAllTeams(),
   });
 
   const { data: rounds = [] } = useQuery<Round[]>({
-    queryKey: ["/api/rounds"],
+    queryKey: ["rounds"],
+    queryFn: () => storageService.getAllRounds(),
   });
 
   const { data: allAllocations = [] } = useQuery<TeamAllocation[]>({
-    queryKey: ["/api/allocations"],
+    queryKey: ["allocations"],
+    queryFn: async () => {
+      const rounds = await storageService.getAllRounds();
+      const allAllocs: TeamAllocation[] = [];
+      for (const round of rounds) {
+        const roundAllocs = await storageService.getAllocationsForRound(round.id);
+        allAllocs.push(...roundAllocs);
+      }
+      return allAllocs;
+    },
   });
 
   const currentRound = rounds.find(r => r.roundNumber === gameState?.currentRound);
   
-  const { data: colorCard } = useQuery<ColorCard>({
-    queryKey: ["/api/color-cards", currentRound?.colorCardId],
+  const { data: colorCard } = useQuery<ColorCard | undefined>({
+    queryKey: ["colorCard", currentRound?.colorCardId],
+    queryFn: () => currentRound?.colorCardId ? storageService.getColorCard(currentRound.colorCardId) : Promise.resolve(undefined),
     enabled: !!currentRound?.colorCardId,
   });
 
@@ -214,7 +229,7 @@ export default function TeamInput() {
       // Submit all teams sequentially
       const promises = teams.map(team => {
         const data = teamData[team.id];
-        return apiRequest("POST", "/api/allocations", {
+        return createTeamAllocationWithNav({
           teamId: team.id,
           roundId: currentRound.id,
           equity: data.equity,
@@ -229,8 +244,8 @@ export default function TeamInput() {
       await Promise.all(promises);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/allocations"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["allocations"] });
       toast({
         title: "All Allocations Submitted",
         description: "Navigating to results...",

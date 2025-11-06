@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { storageService } from "@/lib/storage";
 import type { ColorCard, InsertColorCard, BlackCard, InsertBlackCard } from "@shared/schema";
 import { Table2, Upload, AlertCircle, CheckCircle2, Trash2 } from "lucide-react";
 import {
@@ -64,20 +65,23 @@ export default function ManageCards() {
   const [deleteBlackDialogOpen, setDeleteBlackDialogOpen] = useState(false);
 
   const { data: existingColorCards = [] } = useQuery<ColorCard[]>({
-    queryKey: ["/api/color-cards"],
+    queryKey: ["colorCards"],
+    queryFn: () => storageService.getAllColorCards(),
   });
 
   const { data: existingBlackCards = [] } = useQuery<BlackCard[]>({
-    queryKey: ["/api/black-cards"],
+    queryKey: ["blackCards"],
+    queryFn: () => storageService.getAllBlackCards(),
   });
 
   // Color Cards mutations
   const deleteAllColorMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("DELETE", "/api/color-cards", {});
+      await storageService.deleteAllColorCards();
+      return { success: true };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/color-cards"] });
+      queryClient.invalidateQueries({ queryKey: ["colorCards"] });
       toast({
         title: "All Color Cards Deleted",
         description: "All existing color cards have been removed",
@@ -88,11 +92,10 @@ export default function ManageCards() {
 
   const bulkImportColorMutation = useMutation({
     mutationFn: async (cards: InsertColorCard[]) => {
-      const response = await apiRequest("POST", "/api/color-cards/bulk", cards);
-      return await response.json();
+      return await storageService.bulkCreateColorCards(cards);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/color-cards"] });
+      queryClient.invalidateQueries({ queryKey: ["colorCards"] });
       toast({
         title: "Color Cards Imported Successfully",
         description: `Imported ${data.length} color cards`,
@@ -113,10 +116,11 @@ export default function ManageCards() {
   // Black Cards mutations
   const deleteAllBlackMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("DELETE", "/api/black-cards", {});
+      await storageService.deleteAllBlackCards();
+      return { success: true };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/black-cards"] });
+      queryClient.invalidateQueries({ queryKey: ["blackCards"] });
       toast({
         title: "All Black Cards Deleted",
         description: "All existing black cards have been removed",
@@ -127,11 +131,10 @@ export default function ManageCards() {
 
   const bulkImportBlackMutation = useMutation({
     mutationFn: async (cards: InsertBlackCard[]) => {
-      const response = await apiRequest("POST", "/api/black-cards/bulk", cards);
-      return await response.json();
+      return await storageService.bulkCreateBlackCards(cards);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/black-cards"] });
+      queryClient.invalidateQueries({ queryKey: ["blackCards"] });
       toast({
         title: "Black Cards Imported Successfully",
         description: `Imported ${data.length} black cards`,
@@ -468,7 +471,7 @@ export default function ManageCards() {
                   </div>
 
                   <Textarea
-                    placeholder="Paste your Excel data here (tab-separated or comma-separated)&#10;Example:&#10;G1	Bull Market Rally	15.00	2.00	-3.00	1.00&#10;B1	Steady Growth	5.00	4.00	3.00	2.50&#10;O1	Market Volatility	-5.00	3.00	8.00	2.00"
+                    placeholder="Paste your Excel data here (tab-separated or comma-separated)&#10;Example:&#10;G1      Bull Market Rally       15.00   2.00    -3.00   1.00&#10;B1     Steady Growth   5.00    4.00    3.00    2.50&#10;O1     Market Volatility       -5.00   3.00    8.00    2.00"
                     value={colorPastedData}
                     onChange={(e) => setColorPastedData(e.target.value)}
                     rows={10}
@@ -632,7 +635,7 @@ export default function ManageCards() {
                   </div>
 
                   <Textarea
-                    placeholder="Paste your Excel data here (tab-separated or comma-separated)&#10;Example:&#10;W1	Market Crash	-10.00	5.00	15.00	0.00&#10;W2	Policy Change	5.00	-5.00	0.00	0.00"
+                    placeholder="Paste your Excel data here (tab-separated or comma-separated)&#10;Example:&#10;W1      Market Crash    -10.00  5.00    15.00   0.00&#10;W2     Policy Change   5.00    -5.00   0.00    0.00"
                     value={blackPastedData}
                     onChange={(e) => setBlackPastedData(e.target.value)}
                     rows={10}

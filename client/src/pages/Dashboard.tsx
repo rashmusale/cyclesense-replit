@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { storageService } from "@/lib/storage";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,33 +36,45 @@ export default function Dashboard() {
   const [endGameModalOpen, setEndGameModalOpen] = useState(false);
   const [gameRulesOpen, setGameRulesOpen] = useState(false);
 
-  const { data: gameState } = useQuery<GameState>({
-    queryKey: ["/api/game-state"],
+  const { data: gameState } = useQuery<GameState | undefined>({
+    queryKey: ["gameState"],
+    queryFn: () => storageService.getGameState(),
   });
 
   const { data: teams = [] } = useQuery<Team[]>({
-    queryKey: ["/api/teams"],
+    queryKey: ["teams"],
+    queryFn: () => storageService.getAllTeams(),
   });
 
   const { data: allAllocations = [] } = useQuery<TeamAllocation[]>({
-    queryKey: ["/api/allocations"],
+    queryKey: ["allocations"],
+    queryFn: async () => {
+      const rounds = await storageService.getAllRounds();
+      const allAllocs: TeamAllocation[] = [];
+      for (const round of rounds) {
+        const roundAllocs = await storageService.getAllocationsForRound(round.id);
+        allAllocs.push(...roundAllocs);
+      }
+      return allAllocs;
+    },
   });
 
   const { data: rounds = [] } = useQuery<Round[]>({
-    queryKey: ["/api/rounds"],
+    queryKey: ["rounds"],
+    queryFn: () => storageService.getAllRounds(),
   });
 
   const resetGameMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/game/reset", {});
-      return await res.json();
+      await storageService.resetGame();
+      return { success: true };
     },
     onSuccess: () => {
       // Reset all queries to initial state to force Dashboard to show welcome screen
-      queryClient.resetQueries({ queryKey: ["/api/teams"] });
-      queryClient.resetQueries({ queryKey: ["/api/game-state"] });
-      queryClient.resetQueries({ queryKey: ["/api/rounds"] });
-      queryClient.resetQueries({ queryKey: ["/api/allocations"] });
+      queryClient.resetQueries({ queryKey: ["teams"] });
+      queryClient.resetQueries({ queryKey: ["gameState"] });
+      queryClient.resetQueries({ queryKey: ["rounds"] });
+      queryClient.resetQueries({ queryKey: ["allocations"] });
       
       toast({
         title: "Game Ended",

@@ -10,7 +10,9 @@ import PhaseBadge from "@/components/PhaseBadge";
 import { Dices, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { storageService } from "@/lib/storage";
+import { drawRandomColorCard } from "@/lib/game-logic";
 import type { ColorCard, GameState } from "@shared/schema";
 
 const PHASES = [
@@ -37,12 +39,14 @@ export default function StartRound() {
   const [drawnCard, setDrawnCard] = useState<ColorCard | null>(null);
   const [virtualStep, setVirtualStep] = useState<VirtualStep>("roll-dice");
 
-  const { data: gameState } = useQuery<GameState>({
-    queryKey: ["/api/game-state"],
+  const { data: gameState } = useQuery<GameState | undefined>({
+    queryKey: ["gameState"],
+    queryFn: () => storageService.getGameState(),
   });
 
   const { data: colorCards = [] } = useQuery<ColorCard[]>({
-    queryKey: ["/api/color-cards"],
+    queryKey: ["colorCards"],
+    queryFn: () => storageService.getAllColorCards(),
   });
 
   const isVirtualMode = gameState?.mode === "virtual";
@@ -56,10 +60,7 @@ export default function StartRound() {
   // Virtual mode: Roll dice only (determine phase)
   const rollDiceMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/rounds/draw-card", {
-        isVirtual: true
-      });
-      return await res.json();
+      return await drawRandomColorCard();
     },
     onSuccess: (data: { phase: string; card: ColorCard }) => {
       // Show rolling animation for 2.5 seconds before revealing card
@@ -116,17 +117,26 @@ export default function StartRound() {
     mutationFn: async () => {
       if (!drawnCard) throw new Error("No card drawn");
       
-      const res = await apiRequest("POST", "/api/rounds", {
+      const round = await storageService.createRound({
         roundNumber: nextRoundNumber,
         phase: drawnCard.phase,
         colorCardId: drawnCard.id,
         blackCardId: null
       });
-      return await res.json();
+      
+      // Update game state
+      if (gameState) {
+        await storageService.updateGameState(gameState.id, {
+          currentRound: nextRoundNumber,
+          isActive: true
+        });
+      }
+      
+      return round;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/rounds"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/game-state"] });
+      queryClient.invalidateQueries({ queryKey: ["rounds"] });
+      queryClient.invalidateQueries({ queryKey: ["gameState"] });
       
       if (isVirtualMode) {
         // Virtual mode: Go to team input (returns hidden)

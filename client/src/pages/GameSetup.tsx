@@ -9,7 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { storageService } from "@/lib/storage";
 
 type TeamSetup = {
   id?: string;
@@ -30,7 +31,8 @@ export default function GameSetup() {
 
   // Get existing game state
   const { data: gameState } = useQuery({
-    queryKey: ["/api/game-state"],
+    queryKey: ["gameState"],
+    queryFn: () => storageService.getGameState(),
   });
 
   const startGameMutation = useMutation({
@@ -48,31 +50,33 @@ export default function GameSetup() {
       }
 
       // Reset game first to clear any old data
-      await apiRequest("POST", "/api/game/reset", {});
+      await storageService.resetGame();
 
       // Create game state
-      const gameStateRes = await apiRequest("POST", "/api/game-state", { mode, currentRound: 0, isActive: false });
-      const gameStateResponse = await gameStateRes.json();
+      const gameStateResponse = await storageService.createGameState({ 
+        mode, 
+        currentRound: 0, 
+        isActive: false 
+      });
 
       // Create teams
       const createdTeams = [];
       for (const team of teams) {
-        const teamRes = await apiRequest("POST", "/api/teams", { 
+        const teamResponse = await storageService.createTeam({ 
           name: team.name,
           initialEquity: team.equity,
           initialDebt: team.debt,
           initialGold: team.gold,
           initialCash: team.cash
         });
-        const teamResponse = await teamRes.json();
         createdTeams.push({ ...teamResponse, initialAllocation: team });
       }
 
       return { gameState: gameStateResponse, teams: createdTeams };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/game-state"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["gameState"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
       toast({
         title: "Game Started!",
         description: `${teams.length} teams registered. Ready to start first round.`,
