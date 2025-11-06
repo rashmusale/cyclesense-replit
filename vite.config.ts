@@ -4,6 +4,7 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig({
+  base: '/cyclesense-replit/',
   plugins: [
     react(),
     runtimeErrorOverlay(),
@@ -37,5 +38,4 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
-  base: "/cyclesense-replit/",
 });
