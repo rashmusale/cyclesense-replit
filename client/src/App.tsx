@@ -14,7 +14,7 @@ import RoundSummary from "@/pages/RoundSummary";
 import ManageCards from "@/pages/ManageCards";
 import NotFound from "@/pages/not-found";
 
-function Router() {
+function AppRouter() {
   return (
     <Router base="/cyclesense-replit">
       <Switch>
@@ -54,7 +54,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <AppRouter />
       </TooltipProvider>
     </QueryClientProvider>
   );
