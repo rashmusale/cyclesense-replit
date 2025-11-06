@@ -8,7 +8,7 @@ import { spawn } from "child_process";
 
 console.log("Starting Vite dev server on port 5000...");
 
-const viteProcess = spawn("npx", ["vite", "--port", "5000", "--host", "0.0.0.0"], {
+const viteProcess = spawn("npx", ["vite", "--port", "5000", "--host"], {
   stdio: "inherit",
   shell: true,
 });
