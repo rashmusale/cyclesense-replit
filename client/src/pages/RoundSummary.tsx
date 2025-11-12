@@ -132,11 +132,14 @@ export default function RoundSummary() {
       queryClient.invalidateQueries({ queryKey: ["rounds"] });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
       queryClient.invalidateQueries({ queryKey: ["allocations"] });
+      queryClient.invalidateQueries({ queryKey: ["blackCard"] });
       toast({
         title: "Black Card Applied",
         description: "NAVs recalculated with black card effects",
       });
       setBlackCardDialogOpen(false);
+      // Clear drawn card state so the applied card section shows
+      setDrawnBlackCard(null);
     },
   });
 
@@ -323,7 +326,7 @@ export default function RoundSummary() {
         )}
 
         {/* Black Card Prompt */}
-        {!round.blackCardId && !drawnBlackCard && !isDrawingBlackCard && (
+        {!round.blackCardId && !drawnBlackCard && !isDrawingBlackCard && !applyBlackCardMutation.isSuccess && (
           <Card className="mb-6 border-orange-500">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -390,57 +393,63 @@ export default function RoundSummary() {
         )}
 
         {/* Black Card Applied */}
-        {round.blackCardId && appliedBlackCard && (
-          <Card className="mb-6 bg-black/90 border-2 border-purple-500">
-            <CardHeader>
-              <CardTitle className="text-white">Black Card Applied</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm text-purple-200 mb-1">Card Number</div>
-                    <div className={`font-mono font-semibold text-white`}>{appliedBlackCard.cardNumber}</div>
+        {((round.blackCardId && appliedBlackCard) || (applyBlackCardMutation.isSuccess && selectedBlackCard)) && (() => {
+          // Use appliedBlackCard if available, otherwise use selectedBlackCard for immediate display
+          const displayCard = appliedBlackCard || selectedBlackCard;
+          if (!displayCard) return null;
+          
+          return (
+            <Card className="mb-6 bg-black/90 border-2 border-purple-500">
+              <CardHeader>
+                <CardTitle className="text-white">Black Card Applied</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm text-purple-200 mb-1">Card Number</div>
+                      <div className={`font-mono font-semibold text-white`}>{displayCard.cardNumber}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-purple-200 mb-1">Effect</div>
+                      <div className="text-base text-white">{displayCard.cardText}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-sm text-purple-200 mb-1">Effect</div>
-                    <div className="text-base text-white">{appliedBlackCard.cardText}</div>
+                  
+                  <div className="border-t border-white/20 pt-4">
+                    <div className="text-sm font-medium mb-3 text-white">Market Impact</div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                        <span className="text-xs font-medium text-white/90 mb-1">Equity</span>
+                        <span className="font-mono font-bold text-lg text-white">
+                          {Number(displayCard.equityModifier) > 0 ? "+" : ""}{displayCard.equityModifier}%
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                        <span className="text-xs font-medium text-white/90 mb-1">Debt</span>
+                        <span className="font-mono font-bold text-lg text-white">
+                          {Number(displayCard.debtModifier) > 0 ? "+" : ""}{displayCard.debtModifier}%
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                        <span className="text-xs font-medium text-white/90 mb-1">Gold</span>
+                        <span className="font-mono font-bold text-lg text-white">
+                          {Number(displayCard.goldModifier) > 0 ? "+" : ""}{displayCard.goldModifier}%
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
+                        <span className="text-xs font-medium text-white/90 mb-1">Cash</span>
+                        <span className="font-mono font-bold text-lg text-white">
+                          {Number(displayCard.cashModifier) > 0 ? "+" : ""}{displayCard.cashModifier}%
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="border-t border-white/20 pt-4">
-                  <div className="text-sm font-medium mb-3 text-white">Market Impact</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
-                      <span className="text-xs font-medium text-white/90 mb-1">Equity</span>
-                      <span className="font-mono font-bold text-lg text-white">
-                        {Number(appliedBlackCard.equityModifier) > 0 ? "+" : ""}{appliedBlackCard.equityModifier}%
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
-                      <span className="text-xs font-medium text-white/90 mb-1">Debt</span>
-                      <span className="font-mono font-bold text-lg text-white">
-                        {Number(appliedBlackCard.debtModifier) > 0 ? "+" : ""}{appliedBlackCard.debtModifier}%
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
-                      <span className="text-xs font-medium text-white/90 mb-1">Gold</span>
-                      <span className="font-mono font-bold text-lg text-white">
-                        {Number(appliedBlackCard.goldModifier) > 0 ? "+" : ""}{appliedBlackCard.goldModifier}%
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
-                      <span className="text-xs font-medium text-white/90 mb-1">Cash</span>
-                      <span className="font-mono font-bold text-lg text-white">
-                        {Number(appliedBlackCard.cashModifier) > 0 ? "+" : ""}{appliedBlackCard.cashModifier}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Actions */}
         <div className="flex justify-center gap-4">
