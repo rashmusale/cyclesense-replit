@@ -13,6 +13,7 @@ import TeamInput from "@/pages/TeamInput";
 import RoundSummary from "@/pages/RoundSummary";
 import ManageCards from "@/pages/ManageCards";
 import NotFound from "@/pages/not-found";
+import logoUrl from "@assets/favicon.png";
 
 function AppRouter() {
   return (
@@ -44,7 +45,12 @@ function App() {
 
   if (!isInitialized) {
     return (
-      <div data-testid="text-loading" className="flex items-center justify-center min-h-screen">
+      <div data-testid="text-loading" className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <img 
+          src={logoUrl} 
+          alt="CycleSense" 
+          className="w-16 h-16 animate-spin-slow"
+        />
         <div className="text-lg">Loading CycleSense...</div>
       </div>
     );

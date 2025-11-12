@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, ChevronUp, ChevronDown } from "lucide-react";
 import type { Team, GameState, Round, ColorCard } from "@shared/schema";
+import logoUrl from "@assets/favicon.png";
 
 interface TeamAllocationData {
   equity: number;
@@ -88,11 +89,17 @@ export default function TeamInput() {
       teams.forEach(team => {
         if (currentRoundNum === 1) {
           // For Round 1, use the team's initial allocations from game setup
+          // Ensure values meet constraints: min 1%, gold/cash max 25%
+          const equity = Math.max(1, team.initialEquity || 25);
+          const debt = Math.max(1, team.initialDebt || 25);
+          const gold = Math.max(1, Math.min(25, team.initialGold || 25));
+          const cash = Math.max(1, Math.min(25, team.initialCash || 25));
+          
           initialData[team.id] = {
-            equity: team.initialEquity || 25,
-            debt: team.initialDebt || 25,
-            gold: team.initialGold || 25,
-            cash: team.initialCash || 25,
+            equity,
+            debt,
+            gold,
+            cash,
             pitchScore: 0,
           };
         } else {
@@ -104,11 +111,17 @@ export default function TeamInput() {
             : null;
           
           // Use previous allocation or fallback to team's initial allocations
+          // Ensure values meet constraints: min 1%, gold/cash max 25%
+          const equity = Math.max(1, prevAllocation?.equity || team.initialEquity || 25);
+          const debt = Math.max(1, prevAllocation?.debt || team.initialDebt || 25);
+          const gold = Math.max(1, Math.min(25, prevAllocation?.gold || team.initialGold || 25));
+          const cash = Math.max(1, Math.min(25, prevAllocation?.cash || team.initialCash || 25));
+          
           initialData[team.id] = {
-            equity: prevAllocation?.equity || team.initialEquity || 25,
-            debt: prevAllocation?.debt || team.initialDebt || 25,
-            gold: prevAllocation?.gold || team.initialGold || 25,
-            cash: prevAllocation?.cash || team.initialCash || 25,
+            equity,
+            debt,
+            gold,
+            cash,
             pitchScore: 0,
           };
         }
@@ -118,13 +131,28 @@ export default function TeamInput() {
   }, [teams, rounds, allAllocations, currentRound?.id]);
 
   const updateTeamField = (teamId: string, field: keyof TeamAllocationData, value: number) => {
-    setTeamData(prev => ({
-      ...prev,
-      [teamId]: {
-        ...prev[teamId],
-        [field]: Math.max(0, field === 'pitchScore' ? Math.min(5, value) : Math.min(100, value))
+    setTeamData(prev => {
+      const current = prev[teamId];
+      let newValue = value;
+      
+      if (field === 'pitchScore') {
+        newValue = Math.max(0, Math.min(5, value));
+      } else if (field === 'gold' || field === 'cash') {
+        // Gold and Cash: min 1%, max 25%
+        newValue = Math.max(1, Math.min(25, value));
+      } else if (field === 'equity' || field === 'debt') {
+        // Equity and Debt: min 1%, max 100%
+        newValue = Math.max(1, Math.min(100, value));
       }
-    }));
+      
+      return {
+        ...prev,
+        [teamId]: {
+          ...current,
+          [field]: newValue
+        }
+      };
+    });
   };
 
   const getAllocationTotal = (teamId: string) => {
@@ -174,31 +202,21 @@ export default function TeamInput() {
     }
   };
 
-  // Calculate total portfolio change (sum of absolute differences)
-  const getTotalPortfolioChange = (teamId: string) => {
-    const currentData = teamData[teamId];
-    const previousData = getPreviousAllocation(teamId);
-    
-    if (!currentData || !previousData) return 0;
-    
-    const equityChange = Math.abs(currentData.equity - previousData.equity);
-    const debtChange = Math.abs(currentData.debt - previousData.debt);
-    const goldChange = Math.abs(currentData.gold - previousData.gold);
-    const cashChange = Math.abs(currentData.cash - previousData.cash);
-    
-    return equityChange + debtChange + goldChange + cashChange;
-  };
 
   const isValidAllocation = (teamId: string) => {
+    const data = teamData[teamId];
+    if (!data) return false;
+    
     const total = getAllocationTotal(teamId);
-    const change = getTotalPortfolioChange(teamId);
     
     // Must total 100%
     if (total !== 100) return false;
     
-    // For Round 2+, total change cannot exceed 20%
-    const currentRoundNum = currentRound?.roundNumber || 1;
-    if (currentRoundNum > 1 && change > 20) return false;
+    // All allocations must be at least 1%
+    if (data.equity < 1 || data.debt < 1 || data.gold < 1 || data.cash < 1) return false;
+    
+    // Gold and Cash cannot exceed 25%
+    if (data.gold > 25 || data.cash > 25) return false;
     
     return true;
   };
@@ -211,15 +229,25 @@ export default function TeamInput() {
       
       // Validate all teams
       for (const team of teams) {
+        const data = teamData[team.id];
+        if (!data) {
+          throw new Error(`${team.name} has no allocation data`);
+        }
+        
         const total = getAllocationTotal(team.id);
-        const change = getTotalPortfolioChange(team.id);
         
         if (total !== 100) {
           throw new Error(`${team.name} allocations must total 100% (currently ${total}%)`);
         }
         
-        if (currentRound.roundNumber > 1 && change > 20) {
-          throw new Error(`${team.name} portfolio change (${change.toFixed(1)}%) exceeds 20% limit`);
+        // All allocations must be at least 1%
+        if (data.equity < 1 || data.debt < 1 || data.gold < 1 || data.cash < 1) {
+          throw new Error(`${team.name} all allocations must be at least 1%`);
+        }
+        
+        // Gold and Cash cannot exceed 25%
+        if (data.gold > 25 || data.cash > 25) {
+          throw new Error(`${team.name} gold and cash allocations cannot exceed 25%`);
         }
       }
 
@@ -264,7 +292,12 @@ export default function TeamInput() {
         <Header />
         <div className="container mx-auto px-4 py-8">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 flex flex-col items-center gap-4">
+              <img 
+                src={logoUrl} 
+                alt="CycleSense" 
+                className="w-16 h-16 animate-spin-slow"
+              />
               <p className="text-center text-muted-foreground">No active round. Please start a round first.</p>
             </CardContent>
           </Card>
@@ -281,8 +314,7 @@ export default function TeamInput() {
         <div className="mb-6">
           <h1 className="text-4xl font-bold mb-2">Round {currentRound.roundNumber} - Team Allocations</h1>
           <p className="text-muted-foreground">
-            Enter allocations for all teams (must total 100%
-            {currentRound.roundNumber > 1 && ", max 20% total portfolio change from previous round"})
+            Enter allocations for all teams (must total 100%, minimum 1% each, max 25% for Gold & Cash)
           </p>
         </div>
 
@@ -310,41 +342,89 @@ export default function TeamInput() {
                     <TableHead className="w-[180px]">Team Name</TableHead>
                     <TableHead className="text-center w-[100px]">Equity %</TableHead>
                     <TableHead className="text-center w-[100px]">Debt %</TableHead>
-                    <TableHead className="text-center w-[100px]">Gold %</TableHead>
-                    <TableHead className="text-center w-[100px]">Cash %</TableHead>
+                    <TableHead className="text-center w-[100px]">Gold % (max 25%)</TableHead>
+                    <TableHead className="text-center w-[100px]">Cash % (max 25%)</TableHead>
                     <TableHead className="text-center w-[100px]">Pitch (0-5)</TableHead>
-                    <TableHead className="text-center w-[90px]">Change %</TableHead>
                     <TableHead className="text-center w-[80px]">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {teams.map(team => {
-                    const data = teamData[team.id] || {
+                    const defaultData = {
                       equity: 25,
                       debt: 25,
                       gold: 25,
                       cash: 25,
                       pitchScore: 0,
                     };
+                    const data = teamData[team.id] || defaultData;
                     const total = getAllocationTotal(team.id);
-                    const change = getTotalPortfolioChange(team.id);
                     const isValid = isValidAllocation(team.id);
                     const totalValid = total === 100;
-                    const changeValid = currentRound.roundNumber === 1 || change <= 20;
+                    const hasMinError = data.equity < 1 || data.debt < 1 || data.gold < 1 || data.cash < 1;
+                    const hasMaxError = data.gold > 25 || data.cash > 25;
+
+                    // Helper component for number input with steppers
+                    const NumberInputWithSteppers = ({ 
+                      value, 
+                      onChange, 
+                      min, 
+                      max, 
+                      field,
+                      testId 
+                    }: { 
+                      value: number; 
+                      onChange: (value: number) => void; 
+                      min: number; 
+                      max: number;
+                      field: string;
+                      testId: string;
+                    }) => (
+                      <div className="relative flex items-center">
+                        <Input
+                          type="number"
+                          min={min}
+                          max={max}
+                          value={value}
+                          onChange={(e) => onChange(parseInt(e.target.value) || min)}
+                          className="text-center font-mono pr-8"
+                          data-testid={testId}
+                        />
+                        <div className="absolute right-1 flex flex-col">
+                          <button
+                            type="button"
+                            onClick={() => onChange(Math.min(max, value + 1))}
+                            className="h-4 w-6 flex items-center justify-center hover:bg-accent rounded-t-sm"
+                            tabIndex={-1}
+                            data-testid={`${testId}-increment`}
+                          >
+                            <ChevronUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onChange(Math.max(min, value - 1))}
+                            className="h-4 w-6 flex items-center justify-center hover:bg-accent rounded-b-sm border-t"
+                            tabIndex={-1}
+                            data-testid={`${testId}-decrement`}
+                          >
+                            <ChevronDown className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    );
 
                     return (
                       <TableRow key={team.id}>
                         <TableCell className="font-semibold">{team.name}</TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
+                            <NumberInputWithSteppers
                               value={data.equity}
-                              onChange={(e) => updateTeamField(team.id, 'equity', parseInt(e.target.value) || 0)}
-                              className="text-center font-mono"
-                              data-testid={`input-equity-${team.id}`}
+                              onChange={(val) => updateTeamField(team.id, 'equity', val)}
+                              min={1}
+                              max={100}
+                              field="equity"
+                              testId={`input-equity-${team.id}`}
                             />
                             <div className="text-xs italic text-muted-foreground/60 text-center">
                               prev: {getPreviousAllocation(team.id)?.equity || 0}%
@@ -353,14 +433,13 @@ export default function TeamInput() {
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
+                            <NumberInputWithSteppers
                               value={data.debt}
-                              onChange={(e) => updateTeamField(team.id, 'debt', parseInt(e.target.value) || 0)}
-                              className="text-center font-mono"
-                              data-testid={`input-debt-${team.id}`}
+                              onChange={(val) => updateTeamField(team.id, 'debt', val)}
+                              min={1}
+                              max={100}
+                              field="debt"
+                              testId={`input-debt-${team.id}`}
                             />
                             <div className="text-xs italic text-muted-foreground/60 text-center">
                               prev: {getPreviousAllocation(team.id)?.debt || 0}%
@@ -369,14 +448,13 @@ export default function TeamInput() {
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
+                            <NumberInputWithSteppers
                               value={data.gold}
-                              onChange={(e) => updateTeamField(team.id, 'gold', parseInt(e.target.value) || 0)}
-                              className="text-center font-mono"
-                              data-testid={`input-gold-${team.id}`}
+                              onChange={(val) => updateTeamField(team.id, 'gold', val)}
+                              min={1}
+                              max={25}
+                              field="gold"
+                              testId={`input-gold-${team.id}`}
                             />
                             <div className="text-xs italic text-muted-foreground/60 text-center">
                               prev: {getPreviousAllocation(team.id)?.gold || 0}%
@@ -385,14 +463,13 @@ export default function TeamInput() {
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
+                            <NumberInputWithSteppers
                               value={data.cash}
-                              onChange={(e) => updateTeamField(team.id, 'cash', parseInt(e.target.value) || 0)}
-                              className="text-center font-mono"
-                              data-testid={`input-cash-${team.id}`}
+                              onChange={(val) => updateTeamField(team.id, 'cash', val)}
+                              min={1}
+                              max={25}
+                              field="cash"
+                              testId={`input-cash-${team.id}`}
                             />
                             <div className="text-xs italic text-muted-foreground/60 text-center">
                               prev: {getPreviousAllocation(team.id)?.cash || 0}%
@@ -401,23 +478,17 @@ export default function TeamInput() {
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="5"
+                            <NumberInputWithSteppers
                               value={data.pitchScore}
-                              onChange={(e) => updateTeamField(team.id, 'pitchScore', parseInt(e.target.value) || 0)}
-                              className="text-center font-mono bg-accent/30"
-                              data-testid={`input-pitch-${team.id}`}
+                              onChange={(val) => updateTeamField(team.id, 'pitchScore', val)}
+                              min={0}
+                              max={5}
+                              field="pitchScore"
+                              testId={`input-pitch-${team.id}`}
                             />
                             <div className="text-xs italic text-transparent text-center select-none">
                               &nbsp;
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className={`font-mono text-sm ${changeValid ? 'text-green-600' : 'text-red-600'}`} data-testid={`text-change-${team.id}`}>
-                            {change.toFixed(1)}%
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
@@ -427,7 +498,8 @@ export default function TeamInput() {
                             <div className="flex flex-col items-center gap-1">
                               <AlertCircle className="w-5 h-5 text-red-500" data-testid={`status-invalid-${team.id}`} />
                               {!totalValid && <span className="text-xs text-red-500">Total: {total}%</span>}
-                              {totalValid && !changeValid && <span className="text-xs text-red-500">Change: {change.toFixed(1)}%</span>}
+                              {totalValid && hasMinError && <span className="text-xs text-red-500">Min: 1%</span>}
+                              {totalValid && hasMaxError && <span className="text-xs text-red-500">Max: 25%</span>}
                             </div>
                           )}
                         </TableCell>

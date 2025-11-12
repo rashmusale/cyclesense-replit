@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import logoUrl from "@assets/favicon.png";
 
 const PHASE_COLORS = {
   green: { bg: "bg-[#2e8b57]", border: "border-[#2e8b57]", text: "text-white", textMuted: "text-white/90" },
@@ -184,7 +185,12 @@ export default function RoundSummary() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card>
-          <CardContent className="p-8">
+          <CardContent className="p-8 flex flex-col items-center gap-4">
+            <img 
+              src={logoUrl} 
+              alt="CycleSense" 
+              className="w-16 h-16 animate-spin-slow"
+            />
             <p className="text-muted-foreground">Loading round data...</p>
           </CardContent>
         </Card>
