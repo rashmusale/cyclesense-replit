@@ -364,19 +364,21 @@ export default function RoundSummary() {
                   <div className="text-base text-white" data-testid="text-drawn-black-card-text">{drawnBlackCard.cardText}</div>
                 </div>
               </div>
-              <div className="flex gap-3 mt-6">
-                <Button 
-                  onClick={handleApplyDrawnBlackCard} 
-                  disabled={applyBlackCardMutation.isPending}
-                  data-testid="button-apply-market-impact"
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  {applyBlackCardMutation.isPending ? "Applying..." : "Apply Market Impact"}
-                </Button>
-                <Button variant="outline" onClick={() => setDrawnBlackCard(null)} data-testid="button-redraw-black-card" className="border-purple-500 text-white hover:bg-purple-500/20">
-                  Draw Different Card
-                </Button>
-              </div>
+              {!applyBlackCardMutation.isPending && !applyBlackCardMutation.isSuccess && (
+                <div className="flex gap-3 mt-6">
+                  <Button 
+                    onClick={handleApplyDrawnBlackCard} 
+                    disabled={applyBlackCardMutation.isPending}
+                    data-testid="button-apply-market-impact"
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    Apply Market Impact
+                  </Button>
+                  <Button variant="outline" onClick={() => setDrawnBlackCard(null)} data-testid="button-redraw-black-card" className="border-purple-500 text-white hover:bg-purple-500/20">
+                    Draw Different Card
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -388,40 +390,43 @@ export default function RoundSummary() {
               <CardTitle className="text-white">Black Card Applied</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="text-sm text-purple-200 mb-1">Card Number</div>
-                  <div className="font-semibold text-white">{appliedBlackCard.cardNumber}</div>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-sm text-purple-200 mb-1">Card Number</div>
+                    <div className={`font-mono font-semibold text-white`}>{appliedBlackCard.cardNumber}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-purple-200 mb-1">Effect</div>
+                    <div className="text-base text-white">{appliedBlackCard.cardText}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-sm text-purple-200 mb-1">Effect</div>
-                  <div className="text-white">{appliedBlackCard.cardText}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-purple-200 mb-1">Asset Modifiers</div>
+                
+                <div className="border-t border-white/20 pt-4">
+                  <div className="text-sm font-medium mb-3 text-white">Market Impact</div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
                       <span className="text-xs font-medium text-white/90 mb-1">Equity</span>
                       <span className="font-mono font-bold text-lg text-white">
-                        {Number(appliedBlackCard.equityModifier) > 0 ? '+' : ''}{appliedBlackCard.equityModifier}%
+                        {Number(appliedBlackCard.equityModifier) > 0 ? "+" : ""}{appliedBlackCard.equityModifier}%
                       </span>
                     </div>
                     <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
                       <span className="text-xs font-medium text-white/90 mb-1">Debt</span>
                       <span className="font-mono font-bold text-lg text-white">
-                        {Number(appliedBlackCard.debtModifier) > 0 ? '+' : ''}{appliedBlackCard.debtModifier}%
+                        {Number(appliedBlackCard.debtModifier) > 0 ? "+" : ""}{appliedBlackCard.debtModifier}%
                       </span>
                     </div>
                     <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
                       <span className="text-xs font-medium text-white/90 mb-1">Gold</span>
                       <span className="font-mono font-bold text-lg text-white">
-                        {Number(appliedBlackCard.goldModifier) > 0 ? '+' : ''}{appliedBlackCard.goldModifier}%
+                        {Number(appliedBlackCard.goldModifier) > 0 ? "+" : ""}{appliedBlackCard.goldModifier}%
                       </span>
                     </div>
                     <div className="flex flex-col items-center justify-center p-3 rounded bg-white/10">
                       <span className="text-xs font-medium text-white/90 mb-1">Cash</span>
                       <span className="font-mono font-bold text-lg text-white">
-                        {Number(appliedBlackCard.cashModifier) > 0 ? '+' : ''}{appliedBlackCard.cashModifier}%
+                        {Number(appliedBlackCard.cashModifier) > 0 ? "+" : ""}{appliedBlackCard.cashModifier}%
                       </span>
                     </div>
                   </div>
