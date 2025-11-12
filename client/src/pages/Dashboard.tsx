@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { Team, GameState, TeamAllocation, Round, ColorCard, BlackCard } from "@shared/schema";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import logoUrl from "@assets/CycleSense LOGO_1761839230730.png";
+import logoUrl from "@assets/CYCLESENSE GIF.gif";
 import {
   AlertDialog,
   AlertDialogAction,
