@@ -378,7 +378,6 @@ export class LocalStorageService implements IStorage {
         await this.updateTeam(team.id, {
           currentNav: alloc.navBefore,
           pitchTotal: team.pitchTotal - alloc.pitchScore,
-          emotionTotal: team.emotionTotal - alloc.emotionScore,
         });
       }
     }

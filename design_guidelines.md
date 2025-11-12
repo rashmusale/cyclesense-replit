@@ -87,8 +87,7 @@
 - Allocation inputs: 4-column grid (Equity/Debt/Gold/Cash) with percentage inputs
 - Live validation: Sum to 100% indicator below allocations
 - Range inputs for rebalance percentage with visual slider (0-20%)
-- Dropdown selects for emotion tokens with icon indicators
-- Number inputs for pitch/emotion points with +/- steppers
+- Number inputs for pitch points with +/- steppers
 - Portfolio return input: Large, prominent with % suffix
 
 **Configure Teams Form:**

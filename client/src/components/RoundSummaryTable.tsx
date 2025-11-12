@@ -6,7 +6,6 @@ interface TeamResult {
   navBefore: number;
   portfolioReturn: number;
   pitchPoints: number;
-  emotionPoints: number;
   navAfter: number;
 }
 
@@ -26,8 +25,6 @@ export default function RoundSummaryTable({ results }: RoundSummaryTableProps) {
             <TableHead className="text-right text-sm font-semibold uppercase tracking-wide">Return %</TableHead>
             <TableHead className="text-center w-12"></TableHead>
             <TableHead className="text-right text-sm font-semibold uppercase tracking-wide">+Pitch</TableHead>
-            <TableHead className="text-center w-12"></TableHead>
-            <TableHead className="text-right text-sm font-semibold uppercase tracking-wide">+Emotion</TableHead>
             <TableHead className="text-center w-12"></TableHead>
             <TableHead className="text-right text-sm font-semibold uppercase tracking-wide">After NAV</TableHead>
           </TableRow>
@@ -52,12 +49,6 @@ export default function RoundSummaryTable({ results }: RoundSummaryTableProps) {
               </TableCell>
               <TableCell className="text-right font-mono text-green-600 dark:text-green-400">
                 +{result.pitchPoints}
-              </TableCell>
-              <TableCell className="text-center">
-                <ArrowRight className="w-4 h-4 text-muted-foreground mx-auto" />
-              </TableCell>
-              <TableCell className="text-right font-mono text-green-600 dark:text-green-400">
-                +{result.emotionPoints}
               </TableCell>
               <TableCell className="text-center">
                 <ArrowRight className="w-4 h-4 text-muted-foreground mx-auto" />

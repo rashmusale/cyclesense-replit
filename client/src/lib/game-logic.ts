@@ -22,16 +22,15 @@ export function calculateWeightedReturn(
 }
 
 /**
- * Calculate NAV after applying color card returns and pitch/emotion scores
- * Formula: NAV After = NAV Before × (1 + Weighted Return / 100) + Pitch Score + Emotion Score
+ * Calculate NAV after applying color card returns and pitch score
+ * Formula: NAV After = NAV Before × (1 + Weighted Return / 100) + Pitch Score
  */
 export function calculateNavAfterColorCard(
   navBefore: number,
   weightedReturn: number,
-  pitchScore: number = 0,
-  emotionScore: number = 0
+  pitchScore: number = 0
 ): number {
-  return navBefore * (1 + weightedReturn / 100) + pitchScore + emotionScore;
+  return navBefore * (1 + weightedReturn / 100) + pitchScore;
 }
 
 /**
@@ -74,9 +73,8 @@ export async function calculateTeamNav(params: {
   colorCardId: string;
   blackCardId?: string | null;
   pitchScore?: number;
-  emotionScore?: number;
 }): Promise<number> {
-  const { navBefore, allocation, colorCardId, blackCardId, pitchScore = 0, emotionScore = 0 } = params;
+  const { navBefore, allocation, colorCardId, blackCardId, pitchScore = 0 } = params;
 
   // Get color card
   const colorCard = await storageService.getColorCard(colorCardId);
@@ -88,7 +86,7 @@ export async function calculateTeamNav(params: {
   const weightedReturn = calculateWeightedReturn(allocation, colorCard);
 
   // Calculate NAV after color card
-  let navAfter = calculateNavAfterColorCard(navBefore, weightedReturn, pitchScore, emotionScore);
+  let navAfter = calculateNavAfterColorCard(navBefore, weightedReturn, pitchScore);
 
   // Apply black card if present
   if (blackCardId) {
@@ -145,9 +143,8 @@ export async function createTeamAllocationWithNav(params: {
   gold: number;
   cash: number;
   pitchScore?: number;
-  emotionScore?: number;
 }): Promise<TeamAllocation> {
-  const { teamId, roundId, equity, debt, gold, cash, pitchScore = 0, emotionScore = 0 } = params;
+  const { teamId, roundId, equity, debt, gold, cash, pitchScore = 0 } = params;
 
   // Validate allocation totals 100%
   const total = equity + debt + gold + cash;
@@ -176,7 +173,6 @@ export async function createTeamAllocationWithNav(params: {
     colorCardId: round.colorCardId,
     blackCardId: round.blackCardId,
     pitchScore,
-    emotionScore,
   });
 
   // Create allocation
@@ -188,7 +184,7 @@ export async function createTeamAllocationWithNav(params: {
     gold,
     cash,
     pitchScore,
-    emotionScore,
+    emotionScore: 0,
     navBefore: navBefore.toFixed(2),
     navAfter: navAfter.toFixed(2),
   });
@@ -197,7 +193,6 @@ export async function createTeamAllocationWithNav(params: {
   await storageService.updateTeam(teamId, {
     currentNav: navAfter.toFixed(2),
     pitchTotal: team.pitchTotal + pitchScore,
-    emotionTotal: team.emotionTotal + emotionScore,
   });
 
   return allocation;

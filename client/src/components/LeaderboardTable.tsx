@@ -5,7 +5,6 @@ interface Team {
   name: string;
   navCurrent: number;
   pitchTotal: number;
-  emotionTotal: number;
 }
 
 interface LeaderboardTableProps {
@@ -33,7 +32,6 @@ export default function LeaderboardTable({ teams }: LeaderboardTableProps) {
             <TableHead className="text-sm font-semibold uppercase tracking-wide">Team</TableHead>
             <TableHead className="text-right text-sm font-semibold uppercase tracking-wide">NAV</TableHead>
             <TableHead className="text-right text-sm font-semibold uppercase tracking-wide">Pitch</TableHead>
-            <TableHead className="text-right text-sm font-semibold uppercase tracking-wide">Emotion</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -60,11 +58,6 @@ export default function LeaderboardTable({ teams }: LeaderboardTableProps) {
               <TableCell className="text-right">
                 <span className="px-2 py-1 rounded bg-[#2563EB]/10 font-mono text-base font-semibold text-[#2563EB]" data-testid={`text-pitch-${team.id}`}>
                   {team.pitchTotal}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <span className="px-2 py-1 rounded bg-[#F97316]/10 font-mono text-base font-semibold text-[#F97316]" data-testid={`text-emotion-${team.id}`}>
-                  {team.emotionTotal}
                 </span>
               </TableCell>
             </TableRow>

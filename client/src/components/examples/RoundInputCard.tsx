@@ -8,9 +8,7 @@ export default function RoundInputCardExample() {
     allocationGold: 20,
     allocationCash: 10,
     rebalancePct: 5,
-    emotionToken: 'Confidence',
     pitchPoints: 3,
-    emotionPoints: 4,
     portfolioReturn: 2.5,
   });
 

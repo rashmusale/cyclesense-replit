@@ -7,7 +7,6 @@ export default function RoundSummaryTableExample() {
       navBefore: 12.50,
       portfolioReturn: 2.5,
       pitchPoints: 4,
-      emotionPoints: 3,
       navAfter: 15.81,
     },
     {
@@ -15,7 +14,6 @@ export default function RoundSummaryTableExample() {
       navBefore: 11.00,
       portfolioReturn: -1.0,
       pitchPoints: 3,
-      emotionPoints: 4,
       navAfter: 17.89,
     },
   ];

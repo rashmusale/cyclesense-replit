@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TeamInputData {
   allocationEquity: number;
@@ -10,9 +8,7 @@ interface TeamInputData {
   allocationGold: number;
   allocationCash: number;
   rebalancePct: number;
-  emotionToken: string;
   pitchPoints: number;
-  emotionPoints: number;
   portfolioReturn: number;
 }
 
@@ -22,8 +18,6 @@ interface RoundInputCardProps {
   data: TeamInputData;
   onChange: (teamId: number, data: TeamInputData) => void;
 }
-
-const emotionTokens = ['Confidence', 'Discipline', 'Patience', 'Conviction', 'Adaptability'];
 
 export default function RoundInputCard({ teamId, teamName, data, onChange }: RoundInputCardProps) {
   const allocationSum = data.allocationEquity + data.allocationDebt + data.allocationGold + data.allocationCash;
@@ -102,69 +96,32 @@ export default function RoundInputCard({ teamId, teamName, data, onChange }: Rou
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor={`rebalance-${teamId}`} className="text-sm font-medium">Rebalance % (0-20)</Label>
-            <Input
-              id={`rebalance-${teamId}`}
-              type="number"
-              min="0"
-              max="20"
-              step="0.1"
-              value={data.rebalancePct}
-              onChange={(e) => handleChange('rebalancePct', Math.min(20, parseFloat(e.target.value) || 0))}
-              data-testid={`input-rebalance-${teamId}`}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor={`emotion-token-${teamId}`} className="text-sm font-medium">Emotion Token</Label>
-            <Select 
-              value={data.emotionToken} 
-              onValueChange={(value) => handleChange('emotionToken', value)}
-            >
-              <SelectTrigger id={`emotion-token-${teamId}`} data-testid={`select-emotion-${teamId}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {emotionTokens.map((token) => (
-                  <SelectItem key={token} value={token}>
-                    {token}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div>
+          <Label htmlFor={`rebalance-${teamId}`} className="text-sm font-medium">Rebalance % (0-20)</Label>
+          <Input
+            id={`rebalance-${teamId}`}
+            type="number"
+            min="0"
+            max="20"
+            step="0.1"
+            value={data.rebalancePct}
+            onChange={(e) => handleChange('rebalancePct', Math.min(20, parseFloat(e.target.value) || 0))}
+            data-testid={`input-rebalance-${teamId}`}
+          />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor={`pitch-${teamId}`} className="text-sm font-medium">Pitch Points (0-5)</Label>
-            <Input
-              id={`pitch-${teamId}`}
-              type="number"
-              min="0"
-              max="5"
-              step="1"
-              value={data.pitchPoints}
-              onChange={(e) => handleChange('pitchPoints', Math.min(5, parseInt(e.target.value) || 0))}
-              data-testid={`input-pitch-${teamId}`}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor={`emotion-${teamId}`} className="text-sm font-medium">Emotion Points (0-5)</Label>
-            <Input
-              id={`emotion-${teamId}`}
-              type="number"
-              min="0"
-              max="5"
-              step="1"
-              value={data.emotionPoints}
-              onChange={(e) => handleChange('emotionPoints', Math.min(5, parseInt(e.target.value) || 0))}
-              data-testid={`input-emotion-points-${teamId}`}
-            />
-          </div>
+        <div>
+          <Label htmlFor={`pitch-${teamId}`} className="text-sm font-medium">Pitch Points (0-5)</Label>
+          <Input
+            id={`pitch-${teamId}`}
+            type="number"
+            min="0"
+            max="5"
+            step="1"
+            value={data.pitchPoints}
+            onChange={(e) => handleChange('pitchPoints', Math.min(5, parseInt(e.target.value) || 0))}
+            data-testid={`input-pitch-${teamId}`}
+          />
         </div>
 
         <div>

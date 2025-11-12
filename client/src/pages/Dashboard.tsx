@@ -145,7 +145,7 @@ export default function Dashboard() {
     const rows: string[] = [];
     
     // Header
-    rows.push("Round,Team,Equity %,Debt %,Gold %,Cash %,Pitch Score,Emotion Score,NAV Before,NAV After");
+    rows.push("Round,Team,Equity %,Debt %,Gold %,Cash %,Pitch Score,NAV Before,NAV After");
     
     // Create a map from roundId to roundNumber
     const roundIdToNumber = new Map<string, number>();
@@ -170,7 +170,7 @@ export default function Dashboard() {
       const team = teams.find(t => t.id === alloc.teamId);
       const roundNumber = roundIdToNumber.get(alloc.roundId) || 0;
       rows.push(
-        `${roundNumber},${team?.name || 'Unknown'},${alloc.equity},${alloc.debt},${alloc.gold},${alloc.cash},${alloc.pitchScore},${alloc.emotionScore},${alloc.navBefore},${alloc.navAfter}`
+        `${roundNumber},${team?.name || 'Unknown'},${alloc.equity},${alloc.debt},${alloc.gold},${alloc.cash},${alloc.pitchScore},${alloc.navBefore},${alloc.navAfter}`
       );
     });
     
@@ -315,10 +315,6 @@ export default function Dashboard() {
                       <p className="font-semibold">Tokens:</p>
                       <p className="text-muted-foreground">20 per team. Used for allocations.</p>
                     </div>
-                    <div>
-                      <p className="font-semibold">Emotion Tokens:</p>
-                      <p className="text-muted-foreground">Confidence, Discipline, Patience, Conviction, Adaptability</p>
-                    </div>
                   </div>
                 </div>
 
@@ -327,9 +323,9 @@ export default function Dashboard() {
                   <ol className="list-decimal list-inside space-y-2 text-sm">
                     <li>Facilitator rolls the die to choose the deck/phase color (green/blue/orange/red)</li>
                     <li>Facilitator picks top card from the chosen color deck & reads it aloud</li>
-                    <li>Each team decides on rebalance (0-20%) and picks one emotion token</li>
+                    <li>Each team decides on rebalance (0-20%)</li>
                     <li>One by one each team is asked to pitch allocation (1 min)</li>
-                    <li>Facilitator scores Pitch (0–5) + Emotion (0–5)</li>
+                    <li>Facilitator scores Pitch (0–5)</li>
                     <li>Facilitator shows market results → NAV updated on tracker</li>
                     <li>Facilitator draws a Black Card. No allocation change allowed. NAV updated.</li>
                     <li>Leaderboard revealed</li>
@@ -344,7 +340,6 @@ export default function Dashboard() {
                     <li>Minimum 2 teams, each with 2–5 players</li>
                     <li>Each team manages ₹100 Cr (20 tokens of ₹5 Cr each)</li>
                     <li>Each team receives one Portfolio Card with 4 asset classes - Equity, Debt, Gold, Cash</li>
-                    <li>Each team gets 5 Emotion Tokens - Confidence, Discipline, Patience, Conviction, Adaptability</li>
                     <li>Starting NAV = ₹10</li>
                     <li>Starting Allocation: Teams allocate their ₹100 Cr based on how they view the market today</li>
                     <li>The Facilitator is the Market - runs each round, reveals scenarios, and drives outcomes</li>
@@ -360,16 +355,12 @@ export default function Dashboard() {
                       <p className="text-muted-foreground">Strength of reasoning & story</p>
                     </div>
                     <div>
-                      <p className="font-semibold">2. Emotion (0–5 points):</p>
-                      <p className="text-muted-foreground">Choice of emotion token</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">3. Portfolio Returns:</p>
+                      <p className="font-semibold">2. Portfolio Returns:</p>
                       <p className="text-muted-foreground">Based on market outcome</p>
                     </div>
                     <div className="bg-muted p-3 rounded-md">
                       <p className="font-semibold mb-1">NAV Formula:</p>
-                      <p className="font-mono text-xs">New NAV = Old NAV × (1 + Portfolio Return) + Pitch + Emotion</p>
+                      <p className="font-mono text-xs">New NAV = Old NAV × (1 + Portfolio Return) + Pitch</p>
                     </div>
                   </div>
                 </div>
@@ -508,7 +499,6 @@ export default function Dashboard() {
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Current NAV</th>
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">ROI %</th>
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Pitch Total</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Emotion Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -529,7 +519,6 @@ export default function Dashboard() {
                             </span>
                           </td>
                           <td className="p-4 text-right font-mono">{team.pitchTotal}</td>
-                          <td className="p-4 text-right font-mono">{team.emotionTotal}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -599,7 +588,6 @@ export default function Dashboard() {
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Gold %</th>
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#16A34A]">Cash %</th>
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Pitch Score</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Emotion Score</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -644,9 +632,6 @@ export default function Dashboard() {
                               </td>
                               <td className="p-4 text-right">
                                 <span className="font-mono">{alloc.pitchScore}</span>
-                              </td>
-                              <td className="p-4 text-right">
-                                <span className="font-mono">{alloc.emotionScore}</span>
                               </td>
                             </tr>
                           );

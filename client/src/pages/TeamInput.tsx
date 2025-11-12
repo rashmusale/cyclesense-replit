@@ -19,7 +19,6 @@ interface TeamAllocationData {
   gold: number;
   cash: number;
   pitchScore: number;
-  emotionScore: number;
 }
 
 interface TeamAllocation {
@@ -95,7 +94,6 @@ export default function TeamInput() {
             gold: team.initialGold || 25,
             cash: team.initialCash || 25,
             pitchScore: 0,
-            emotionScore: 0,
           };
         } else {
           // For Round 2+, find previous round's allocation
@@ -112,7 +110,6 @@ export default function TeamInput() {
             gold: prevAllocation?.gold || team.initialGold || 25,
             cash: prevAllocation?.cash || team.initialCash || 25,
             pitchScore: 0,
-            emotionScore: 0,
           };
         }
       });
@@ -125,7 +122,7 @@ export default function TeamInput() {
       ...prev,
       [teamId]: {
         ...prev[teamId],
-        [field]: Math.max(0, field === 'pitchScore' || field === 'emotionScore' ? Math.min(5, value) : Math.min(100, value))
+        [field]: Math.max(0, field === 'pitchScore' ? Math.min(5, value) : Math.min(100, value))
       }
     }));
   };
@@ -237,7 +234,6 @@ export default function TeamInput() {
           gold: data.gold,
           cash: data.cash,
           pitchScore: data.pitchScore,
-          emotionScore: data.emotionScore,
         });
       });
       
@@ -317,7 +313,6 @@ export default function TeamInput() {
                     <TableHead className="text-center w-[100px]">Gold %</TableHead>
                     <TableHead className="text-center w-[100px]">Cash %</TableHead>
                     <TableHead className="text-center w-[100px]">Pitch (0-5)</TableHead>
-                    <TableHead className="text-center w-[100px]">Emotion (0-5)</TableHead>
                     <TableHead className="text-center w-[90px]">Change %</TableHead>
                     <TableHead className="text-center w-[80px]">Status</TableHead>
                   </TableRow>
@@ -330,7 +325,6 @@ export default function TeamInput() {
                       gold: 25,
                       cash: 25,
                       pitchScore: 0,
-                      emotionScore: 0,
                     };
                     const total = getAllocationTotal(team.id);
                     const change = getTotalPortfolioChange(team.id);
@@ -415,22 +409,6 @@ export default function TeamInput() {
                               onChange={(e) => updateTeamField(team.id, 'pitchScore', parseInt(e.target.value) || 0)}
                               className="text-center font-mono bg-accent/30"
                               data-testid={`input-pitch-${team.id}`}
-                            />
-                            <div className="text-xs italic text-transparent text-center select-none">
-                              &nbsp;
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="5"
-                              value={data.emotionScore}
-                              onChange={(e) => updateTeamField(team.id, 'emotionScore', parseInt(e.target.value) || 0)}
-                              className="text-center font-mono bg-accent/30"
-                              data-testid={`input-emotion-${team.id}`}
                             />
                             <div className="text-xs italic text-transparent text-center select-none">
                               &nbsp;
