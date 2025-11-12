@@ -340,9 +340,6 @@ export default function RoundSummary() {
                         Select Black Card
                       </Button>
                     )}
-                    <Button variant="outline" onClick={() => setLocation('/')} data-testid="button-skip-black-card">
-                      Skip - View Leaderboard
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -378,9 +375,6 @@ export default function RoundSummary() {
                 </Button>
                 <Button variant="outline" onClick={() => setDrawnBlackCard(null)} data-testid="button-redraw-black-card" className="border-purple-500 text-white hover:bg-purple-500/20">
                   Draw Different Card
-                </Button>
-                <Button variant="outline" onClick={() => setLocation('/')} data-testid="button-skip-black-card-after-draw" className="border-purple-500 text-white hover:bg-purple-500/20">
-                  Skip - View Leaderboard
                 </Button>
               </div>
             </CardContent>
