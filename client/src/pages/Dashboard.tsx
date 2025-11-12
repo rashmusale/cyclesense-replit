@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Trophy, TrendingUp, History, CreditCard, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import type { Team, GameState, TeamAllocation, Round } from "@shared/schema";
+import type { Team, GameState, TeamAllocation, Round, ColorCard, BlackCard } from "@shared/schema";
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import logoUrl from "@assets/CycleSense LOGO_1761839230730.png";
 import {
   AlertDialog,
@@ -62,6 +63,16 @@ export default function Dashboard() {
   const { data: rounds = [] } = useQuery<Round[]>({
     queryKey: ["rounds"],
     queryFn: () => storageService.getAllRounds(),
+  });
+
+  const { data: colorCards = [] } = useQuery<ColorCard[]>({
+    queryKey: ["colorCards"],
+    queryFn: () => storageService.getAllColorCards(),
+  });
+
+  const { data: blackCards = [] } = useQuery<BlackCard[]>({
+    queryKey: ["blackCards"],
+    queryFn: () => storageService.getAllBlackCards(),
   });
 
   const resetGameMutation = useMutation({
@@ -202,22 +213,6 @@ export default function Dashboard() {
     }, 500);
   };
 
-  const getLatestAllocation = (teamId: string) => {
-    // Create a map from roundId to roundNumber for sorting
-    const roundIdToNumber = new Map<string, number>();
-    rounds.forEach(round => {
-      roundIdToNumber.set(round.id, round.roundNumber);
-    });
-
-    const teamAllocs = allAllocations
-      .filter(a => a.teamId === teamId)
-      .sort((a, b) => {
-        const roundNumA = roundIdToNumber.get(a.roundId) || 0;
-        const roundNumB = roundIdToNumber.get(b.roundId) || 0;
-        return roundNumB - roundNumA; // Sort descending (latest first)
-      });
-    return teamAllocs[0] || null;
-  };
 
 
   if (!hasStarted) {
@@ -430,9 +425,6 @@ export default function Dashboard() {
                 <Trophy className="w-4 h-4 mr-2" />
                 Leaderboard
               </TabsTrigger>
-              <TabsTrigger value="allocations" data-testid="tab-allocations">
-                Current Allocations
-              </TabsTrigger>
               <TabsTrigger value="history" data-testid="tab-history">
                 <History className="w-4 h-4 mr-2" />
                 Historical Allocations
@@ -527,54 +519,6 @@ export default function Dashboard() {
               </div>
             </TabsContent>
 
-            <TabsContent value="allocations">
-              <div className="rounded-md border border-border overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gradient-to-r from-[#2563EB]/10 via-[#16A34A]/10 to-[#F97316]/10">
-                      <tr>
-                        <th className="text-left p-4 text-sm font-semibold uppercase tracking-wide">Team</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#2563EB]">Equity</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#DC2626]">Debt</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Gold</th>
-                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#16A34A]">Cash</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {teams.map((team) => {
-                        const latestAlloc = getLatestAllocation(team.id);
-                        return (
-                          <tr key={team.id} className="border-t hover-elevate" data-testid={`row-allocation-${team.id}`}>
-                            <td className="p-4 font-semibold">{team.name}</td>
-                            <td className="p-4 text-right">
-                              <span className="font-mono font-semibold text-[#2563EB]">
-                                {latestAlloc ? latestAlloc.equity : 0}%
-                              </span>
-                            </td>
-                            <td className="p-4 text-right">
-                              <span className="font-mono font-semibold text-[#DC2626]">
-                                {latestAlloc ? latestAlloc.debt : 0}%
-                              </span>
-                            </td>
-                            <td className="p-4 text-right">
-                              <span className="font-mono font-semibold text-[#F97316]">
-                                {latestAlloc ? latestAlloc.gold : 0}%
-                              </span>
-                            </td>
-                            <td className="p-4 text-right">
-                              <span className="font-mono font-semibold text-[#16A34A]">
-                                {latestAlloc ? latestAlloc.cash : 0}%
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </TabsContent>
-
             <TabsContent value="history">
               <div className="rounded-md border border-border overflow-hidden">
                 <div className="overflow-x-auto">
@@ -588,55 +532,149 @@ export default function Dashboard() {
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Gold %</th>
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide text-[#16A34A]">Cash %</th>
                         <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">Pitch Score</th>
+                        <th className="text-right p-4 text-sm font-semibold uppercase tracking-wide">NAV After</th>
+                        <th className="text-left p-4 text-sm font-semibold uppercase tracking-wide">Cards</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(() => {
-                        // Create a map from roundId to roundNumber
-                        const roundIdToNumber = new Map<string, number>();
-                        rounds.forEach(round => {
-                          roundIdToNumber.set(round.id, round.roundNumber);
-                        });
+                      <TooltipProvider>
+                        {(() => {
+                          // Create a map from roundId to roundNumber
+                          const roundIdToNumber = new Map<string, number>();
+                          const roundIdToRound = new Map<string, Round>();
+                          rounds.forEach(round => {
+                            roundIdToNumber.set(round.id, round.roundNumber);
+                            roundIdToRound.set(round.id, round);
+                          });
 
-                        // Sort allocations by round number then team name
-                        const sortedAllocations = [...allAllocations].sort((a, b) => {
-                          const roundNumA = roundIdToNumber.get(a.roundId) || 0;
-                          const roundNumB = roundIdToNumber.get(b.roundId) || 0;
-                          if (roundNumA !== roundNumB) {
-                            return roundNumA - roundNumB;
-                          }
-                          const teamA = teams.find(t => t.id === a.teamId);
-                          const teamB = teams.find(t => t.id === b.teamId);
-                          return (teamA?.name || '').localeCompare(teamB?.name || '');
-                        });
+                          // Create maps for card lookup
+                          const colorCardMap = new Map<string, ColorCard>();
+                          colorCards.forEach(card => {
+                            colorCardMap.set(card.id, card);
+                          });
 
-                        return sortedAllocations.map((alloc) => {
-                          const team = teams.find(t => t.id === alloc.teamId);
-                          const roundNumber = roundIdToNumber.get(alloc.roundId);
-                          
-                          return (
-                            <tr key={alloc.id} className="border-t hover-elevate" data-testid={`row-history-${alloc.id}`}>
-                              <td className="p-4 font-semibold">{roundNumber}</td>
-                              <td className="p-4">{team?.name || 'Unknown'}</td>
-                              <td className="p-4 text-right">
-                                <span className="font-mono text-[#2563EB]">{alloc.equity}%</span>
-                              </td>
-                              <td className="p-4 text-right">
-                                <span className="font-mono text-[#DC2626]">{alloc.debt}%</span>
-                              </td>
-                              <td className="p-4 text-right">
-                                <span className="font-mono text-[#F97316]">{alloc.gold}%</span>
-                              </td>
-                              <td className="p-4 text-right">
-                                <span className="font-mono text-[#16A34A]">{alloc.cash}%</span>
-                              </td>
-                              <td className="p-4 text-right">
-                                <span className="font-mono">{alloc.pitchScore}</span>
-                              </td>
-                            </tr>
-                          );
-                        });
-                      })()}
+                          const blackCardMap = new Map<string, BlackCard>();
+                          blackCards.forEach(card => {
+                            blackCardMap.set(card.id, card);
+                          });
+
+                          // Create Round 0 data for each team (starting allocations)
+                          const round0Data = teams.map(team => ({
+                            id: `round0-${team.id}`,
+                            teamId: team.id,
+                            roundId: 'round0',
+                            equity: team.initialEquity,
+                            debt: team.initialDebt,
+                            gold: team.initialGold,
+                            cash: team.initialCash,
+                            pitchScore: 0,
+                            emotionScore: 0,
+                            navBefore: '10.00',
+                            navAfter: '10.00',
+                          }));
+
+                          // Combine Round 0 data with actual allocations
+                          const allData = [...round0Data, ...allAllocations];
+
+                          // Sort by round number then team name
+                          const sortedAllocations = allData.sort((a, b) => {
+                            const roundNumA = a.roundId === 'round0' ? 0 : (roundIdToNumber.get(a.roundId) || 0);
+                            const roundNumB = b.roundId === 'round0' ? 0 : (roundIdToNumber.get(b.roundId) || 0);
+                            if (roundNumA !== roundNumB) {
+                              return roundNumA - roundNumB;
+                            }
+                            const teamA = teams.find(t => t.id === a.teamId);
+                            const teamB = teams.find(t => t.id === b.teamId);
+                            return (teamA?.name || '').localeCompare(teamB?.name || '');
+                          });
+
+                          return sortedAllocations.map((alloc) => {
+                            const team = teams.find(t => t.id === alloc.teamId);
+                            const roundNumber = alloc.roundId === 'round0' ? 0 : (roundIdToNumber.get(alloc.roundId) || 0);
+                            const round = alloc.roundId === 'round0' ? null : roundIdToRound.get(alloc.roundId);
+                            
+                            const colorCard = round?.colorCardId ? colorCardMap.get(round.colorCardId) : null;
+                            const blackCard = round?.blackCardId ? blackCardMap.get(round.blackCardId) : null;
+                            
+                            return (
+                              <tr key={alloc.id} className="border-t hover-elevate" data-testid={`row-history-${alloc.id}`}>
+                                <td className="p-4 font-semibold">{roundNumber}</td>
+                                <td className="p-4">{team?.name || 'Unknown'}</td>
+                                <td className="p-4 text-right">
+                                  <span className="font-mono text-[#2563EB]">{alloc.equity}%</span>
+                                </td>
+                                <td className="p-4 text-right">
+                                  <span className="font-mono text-[#DC2626]">{alloc.debt}%</span>
+                                </td>
+                                <td className="p-4 text-right">
+                                  <span className="font-mono text-[#F97316]">{alloc.gold}%</span>
+                                </td>
+                                <td className="p-4 text-right">
+                                  <span className="font-mono text-[#16A34A]">{alloc.cash}%</span>
+                                </td>
+                                <td className="p-4 text-right">
+                                  <span className="font-mono">{alloc.pitchScore}</span>
+                                </td>
+                                <td className="p-4 text-right">
+                                  <span className="font-mono font-semibold">{parseFloat(alloc.navAfter).toFixed(2)}</span>
+                                </td>
+                                <td className="p-4">
+                                  <div className="flex flex-wrap gap-2">
+                                    {roundNumber === 0 ? (
+                                      <span className="text-muted-foreground text-sm">—</span>
+                                    ) : (
+                                      <>
+                                        {colorCard && (
+                                          <UITooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="font-mono text-sm cursor-help px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20">
+                                                {colorCard.cardNumber}
+                                              </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-xs">
+                                              <div className="space-y-2">
+                                                <div className="font-semibold">{colorCard.cardNumber}</div>
+                                                <div className="text-sm">{colorCard.cardText}</div>
+                                                <div className="text-xs text-muted-foreground pt-2 border-t">
+                                                  <div>Equity: {Number(colorCard.equityReturn) > 0 ? '+' : ''}{colorCard.equityReturn}%</div>
+                                                  <div>Debt: {Number(colorCard.debtReturn) > 0 ? '+' : ''}{colorCard.debtReturn}%</div>
+                                                  <div>Gold: {Number(colorCard.goldReturn) > 0 ? '+' : ''}{colorCard.goldReturn}%</div>
+                                                  <div>Cash: {Number(colorCard.cashReturn) > 0 ? '+' : ''}{colorCard.cashReturn}%</div>
+                                                </div>
+                                              </div>
+                                            </TooltipContent>
+                                          </UITooltip>
+                                        )}
+                                        {blackCard && (
+                                          <UITooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="font-mono text-sm cursor-help px-2 py-1 rounded bg-black/10 text-foreground hover:bg-black/20 border border-black/20">
+                                                {blackCard.cardNumber}
+                                              </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-xs">
+                                              <div className="space-y-2">
+                                                <div className="font-semibold">{blackCard.cardNumber}</div>
+                                                <div className="text-sm">{blackCard.cardText}</div>
+                                                <div className="text-xs text-muted-foreground pt-2 border-t">
+                                                  <div>Equity: {Number(blackCard.equityModifier) > 0 ? '+' : ''}{blackCard.equityModifier}%</div>
+                                                  <div>Debt: {Number(blackCard.debtModifier) > 0 ? '+' : ''}{blackCard.debtModifier}%</div>
+                                                  <div>Gold: {Number(blackCard.goldModifier) > 0 ? '+' : ''}{blackCard.goldModifier}%</div>
+                                                  <div>Cash: {Number(blackCard.cashModifier) > 0 ? '+' : ''}{blackCard.cashModifier}%</div>
+                                                </div>
+                                              </div>
+                                            </TooltipContent>
+                                          </UITooltip>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          });
+                        })()}
+                      </TooltipProvider>
                     </tbody>
                   </table>
                 </div>
